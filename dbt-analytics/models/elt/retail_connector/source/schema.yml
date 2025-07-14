@@ -1,0 +1,184 @@
+version: 2
+
+models:
+  - name: source_retail_connector_store_sales
+    description: "Deduplicated retail connector store sales data using row number prioritization"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: report_date
+        description: "Date of the sales report"
+      - name: store_key
+        description: "Store business key"
+      - name: product_key
+        description: "Product business key"
+      - name: upc
+        description: "Universal Product Code"
+      - name: begin_date
+        description: "Period begin date"
+      - name: end_date
+        description: "Period end date"
+      - name: sales_amount
+        description: "Total sales amount"
+      - name: sales_quantity
+        description: "Total sales quantity"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - account_id
+            - connector_id
+            - store_key
+            - product_key
+            - report_date
+          config:
+            severity: error
+
+  - name: source_retail_connector_store_inventory
+    description: "Deduplicated retail connector store inventory data using row number prioritization"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: report_date
+        description: "Date of the inventory report"
+      - name: store_key
+        description: "Store business key"
+      - name: product_key
+        description: "Product business key"
+      - name: upc
+        description: "Universal Product Code"
+      - name: on_hand_quantity
+        description: "On hand inventory quantity"
+      - name: on_hand_amount
+        description: "On hand inventory amount"
+      - name: on_order_quantity
+        description: "On order inventory quantity"
+      - name: on_order_amount
+        description: "On order inventory amount"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - account_id
+            - connector_id
+            - store_key
+            - product_key
+            - report_date
+          config:
+            severity: error
+
+  - name: source_retail_connector_product_master
+    description: "Deduplicated retail connector product master data using row number prioritization"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: report_date
+        description: "Date of the product master report"
+      - name: product_key
+        description: "Product business key"
+      - name: product_name
+        description: "Product name"
+      - name: brand_key
+        description: "Brand business key"
+      - name: brand
+        description: "Brand name"
+      - name: category_key
+        description: "Category business key"
+      - name: category
+        description: "Category name"
+      - name: subcategory_key
+        description: "Subcategory business key"
+      - name: subcategory
+        description: "Subcategory name"
+      - name: supplier_key
+        description: "Supplier business key"
+      - name: supplier_name
+        description: "Supplier name"
+      - name: upc
+        description: "Universal Product Code"
+      - name: pack_size
+        description: "Product pack size"
+      - name: unit_of_measure
+        description: "Unit of measure"
+      - name: product_description
+        description: "Product description"
+      - name: product_status
+        description: "Product status"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - account_id
+            - connector_id
+            - product_key
+          config:
+            severity: error
+
+  - name: source_retail_connector_store_master
+    description: "Deduplicated retail connector store master data using row number prioritization"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: report_date
+        description: "Date of the store master report"
+      - name: chain_key
+        description: "Chain business key"
+      - name: chain
+        description: "Chain name"
+      - name: store_key
+        description: "Store business key"
+      - name: store_name
+        description: "Store name"
+      - name: store_number
+        description: "Store number"
+      - name: store_type
+        description: "Store type"
+      - name: store_address
+        description: "Store address"
+      - name: store_city
+        description: "Store city"
+      - name: store_state
+        description: "Store state"
+      - name: store_zip
+        description: "Store zip code"
+      - name: store_country
+        description: "Store country"
+      - name: store_latitude
+        description: "Store latitude"
+      - name: store_longitude
+        description: "Store longitude"
+      - name: store_manager
+        description: "Store manager name"
+      - name: store_phone
+        description: "Store phone number"
+      - name: store_status
+        description: "Store status"
+      - name: district_key
+        description: "District business key"
+      - name: district
+        description: "District name"
+      - name: region_key
+        description: "Region business key"
+      - name: region
+        description: "Region name"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - account_id
+            - connector_id
+            - store_key
+          config:
+            severity: error 

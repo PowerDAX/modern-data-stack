@@ -1,0 +1,102 @@
+version: 2
+
+sources:
+  - name: connector_data
+    database: "{{ env_var('CONNECTOR_DIRECT_PROJECT', 'showcase-analytics') }}"
+    schema: "{{ env_var('CONNECTOR_DATA_DATASET', 'raw_data') }}"
+    description: Raw connector data for target retailer
+    tables:
+      # Fact source tables
+      - name: grocery_connector_location_sales_raw
+        description: Raw location sales data from grocery connectorr
+        tags: ["has_mock_data"]
+        columns:
+          - name: account_id
+          - name: connector_id
+          - name: ingestion_timestamp
+          - name: report_date
+          - name: location_key
+          - name: item_key
+          - name: upc
+          - name: begin_date
+          - name: end_date
+          - name: sales_dollars
+          - name: sales_units
+          - name: regular_sales_dollars
+          - name: regular_sales_units
+          - name: promotional_sales_dollars
+          - name: promotional_sales_units
+      
+      - name: grocery_connector_location_inventory_raw
+        description: Raw location inventory data from grocery connectorr
+        tags: ["has_mock_data"]
+        columns:
+          - name: account_id
+          - name: connector_id
+          - name: ingestion_timestamp
+          - name: report_date
+          - name: location_key
+          - name: item_key
+          - name: upc
+          - name: report_date
+          - name: on_hand_units
+          - name: on_hand_dollars
+          - name: on_order_units
+          - name: on_order_dollars
+          - name: in_transit_units
+          - name: in_transit_dollars
+      
+      # Dimension source tables
+      - name: grocery_connector_item_master_raw
+        description: Raw item master data from grocery connectorr
+        tags: ["has_mock_data"]
+        columns:
+          - name: account_id
+          - name: connector_id
+          - name: ingestion_timestamp
+          - name: report_date
+          - name: item_key
+          - name: item_name
+          - name: brand_key
+          - name: brand
+          - name: category_key
+          - name: category
+          - name: sub_category_key
+          - name: sub_category
+          - name: supplier_key
+          - name: supplier_name
+          - name: upc
+          - name: pack_size
+          - name: unit_of_measure
+          - name: item_description
+          - name: item_status
+      
+      - name: grocery_connector_location_master_raw
+        description: Raw location master data from grocery connectorr
+        tags: ["has_mock_data"]  
+        columns:
+          - name: account_id
+          - name: connector_id
+          - name: ingestion_timestamp
+          - name: report_date
+          - name: chain_key
+          - name: chain
+          - name: location_key
+          - name: location_name
+          - name: location_number
+          - name: location_type
+          - name: location_address
+          - name: location_city
+          - name: location_state
+          - name: location_zip
+          - name: location_country
+          - name: location_latitude
+          - name: location_longitude
+          - name: location_manager
+          - name: location_phone
+          - name: location_status
+          - name: district_key
+          - name: district
+          - name: region_key
+          - name: region 
+

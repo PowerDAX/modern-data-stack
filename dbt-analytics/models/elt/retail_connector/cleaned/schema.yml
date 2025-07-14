@@ -1,0 +1,150 @@
+version: 2
+
+models:
+  - name: clean_retail_connector_store_sales
+    description: "Cleaned and transformed retail connector store sales data with business naming conventions"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: date_key
+        description: "Date key for sales period"
+      - name: store_key
+        description: "Store business key"
+      - name: product_key
+        description: "Product business key"
+      - name: upc
+        description: "Universal Product Code"
+      - name: sales_amount
+        description: "Total sales amount"
+      - name: sales_quantity
+        description: "Total sales quantity"
+
+  - name: clean_retail_connector_store_inventory
+    description: "Cleaned and transformed retail connector store inventory data with business naming conventions"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: date_key
+        description: "Date key for inventory period"
+      - name: store_key
+        description: "Store business key"
+      - name: product_key
+        description: "Product business key"
+      - name: upc
+        description: "Universal Product Code"
+      - name: on_hand_quantity
+        description: "On hand inventory quantity"
+      - name: on_hand_amount
+        description: "On hand inventory amount"
+      - name: on_order_quantity
+        description: "On order inventory quantity"
+      - name: on_order_amount
+        description: "On order inventory amount"
+
+  - name: clean_retail_connector_product_master
+    description: "Cleaned and transformed retail connector product master data with business naming conventions"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: date_key
+        description: "Date key for product master period"
+      - name: product_key
+        description: "Product business key"
+      - name: product
+        description: "Product name"
+      - name: product_brand_key
+        description: "Product brand business key"
+      - name: product_brand
+        description: "Product brand name"
+      - name: product_category_key
+        description: "Product category business key"
+      - name: product_category
+        description: "Product category name"
+      - name: product_subcategory_key
+        description: "Product subcategory business key"
+      - name: product_subcategory
+        description: "Product subcategory name"
+      - name: product_supplier_key
+        description: "Product supplier business key"
+      - name: product_supplier
+        description: "Product supplier name"
+      - name: upc
+        description: "Universal Product Code"
+      - name: pack_size
+        description: "Product pack size"
+      - name: unit_of_measure
+        description: "Unit of measure"
+      - name: product_description
+        description: "Product description"
+      - name: product_status
+        description: "Product status"
+        tests:
+          - accepted_values:
+              values: ['active', 'inactive', 'discontinued']
+
+  - name: clean_retail_connector_store_master
+    description: "Cleaned and transformed retail connector store master data with business naming conventions"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: date_key
+        description: "Date key for store master period"
+      - name: store_chain_key
+        description: "Store chain business key"
+      - name: store_chain
+        description: "Store chain name"
+      - name: store_key
+        description: "Store business key"
+      - name: store_name
+        description: "Store name"
+      - name: store_number
+        description: "Store number"
+      - name: store_type
+        description: "Store type"
+      - name: store_address
+        description: "Store address"
+      - name: store_city
+        description: "Store city"
+      - name: store_state
+        description: "Store state"
+      - name: store_zip
+        description: "Store zip code"
+      - name: store_country
+        description: "Store country"
+      - name: store_latitude
+        description: "Store latitude"
+      - name: store_longitude
+        description: "Store longitude"
+      - name: store_manager
+        description: "Store manager name"
+      - name: store_phone
+        description: "Store phone number"
+      - name: store_status
+        description: "Store status"
+        tests:
+          - accepted_values:
+              values: ['active', 'inactive', 'closed']
+      - name: store_district_key
+        description: "Store district business key"
+      - name: store_district
+        description: "Store district name"
+      - name: store_region_key
+        description: "Store region business key"
+      - name: store_region
+        description: "Store region name"

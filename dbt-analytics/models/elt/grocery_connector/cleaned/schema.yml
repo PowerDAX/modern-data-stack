@@ -1,0 +1,162 @@
+version: 2
+
+models:
+  - name: clean_grocery_connector_location_sales
+    description: "Cleaned and transformed grocery connector location sales data with business naming conventions"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: date_key
+        description: "Date key for sales period"
+      - name: store_key
+        description: "Store business key"
+      - name: product_key
+        description: "Product business key"
+      - name: upc
+        description: "Universal Product Code"
+      - name: sales_dollars
+        description: "Total sales dollars"
+      - name: sales_units
+        description: "Total sales units"
+      - name: regular_sales_dollars
+        description: "Regular sales dollars"
+      - name: regular_sales_units
+        description: "Regular sales units"
+      - name: promotional_sales_dollars
+        description: "Promotional sales dollars"
+      - name: promotional_sales_units
+        description: "Promotional sales units"
+
+  - name: clean_grocery_connector_location_inventory
+    description: "Cleaned and transformed grocery connector location inventory data with business naming conventions"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: date_key
+        description: "Date key for inventory period"
+      - name: store_key
+        description: "Store business key"
+      - name: product_key
+        description: "Product business key"
+      - name: upc
+        description: "Universal Product Code"
+      - name: on_hand_units
+        description: "On hand inventory units"
+      - name: on_hand_dollars
+        description: "On hand inventory dollars"
+      - name: on_order_units
+        description: "On order inventory units"
+      - name: on_order_dollars
+        description: "On order inventory dollars"
+      - name: allocated_units
+        description: "Allocated inventory units"
+      - name: available_units
+        description: "Available inventory units"
+
+  - name: clean_grocery_connector_item_master
+    description: "Cleaned and transformed grocery connector item master data with business naming conventions"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: date_key
+        description: "Date key for item master period"
+      - name: product_key
+        description: "Product business key"
+      - name: product
+        description: "Product name"
+      - name: product_brand_key
+        description: "Product brand business key"
+      - name: product_brand
+        description: "Product brand name"
+      - name: product_category_key
+        description: "Product category business key"
+      - name: product_category
+        description: "Product category name"
+      - name: product_subcategory_key
+        description: "Product subcategory business key"
+      - name: product_subcategory
+        description: "Product subcategory name"
+      - name: product_supplier_key
+        description: "Product supplier business key"
+      - name: product_supplier
+        description: "Product supplier name"
+      - name: upc
+        description: "Universal Product Code"
+      - name: pack_size
+        description: "Product pack size"
+      - name: unit_of_measure
+        description: "Unit of measure"
+      - name: product_description
+        description: "Product description"
+      - name: product_status
+        description: "Product status"
+        tests:
+          - accepted_values:
+              values: ['active', 'inactive', 'discontinued']
+
+  - name: clean_grocery_connector_location_master
+    description: "Cleaned and transformed grocery connector location master data with business naming conventions"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: date_key
+        description: "Date key for location master period"
+      - name: store_chain_key
+        description: "Store chain business key"
+      - name: store_chain
+        description: "Store chain name"
+      - name: store_key
+        description: "Store business key"
+      - name: store_name
+        description: "Store name"
+      - name: store_number
+        description: "Store number"
+      - name: store_type
+        description: "Store type"
+      - name: store_address
+        description: "Store address"
+      - name: store_city
+        description: "Store city"
+      - name: store_state
+        description: "Store state"
+      - name: store_zip
+        description: "Store zip code"
+      - name: store_country
+        description: "Store country"
+      - name: store_latitude
+        description: "Store latitude"
+      - name: store_longitude
+        description: "Store longitude"
+      - name: store_manager
+        description: "Store manager name"
+      - name: store_phone
+        description: "Store phone number"
+      - name: store_status
+        description: "Store status"
+        tests:
+          - accepted_values:
+              values: ['active', 'inactive', 'closed']
+      - name: store_district_key
+        description: "Store district business key"
+      - name: store_district
+        description: "Store district name"
+      - name: store_region_key
+        description: "Store region business key"
+      - name: store_region
+        description: "Store region name"

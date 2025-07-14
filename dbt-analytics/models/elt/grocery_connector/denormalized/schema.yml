@@ -1,0 +1,168 @@
+version: 2
+
+models:
+  - name: denormalized_grocery_connector_fact_sales
+    description: "Denormalized sales fact table with complete dimensional context"
+    columns:
+      - name: sales_id
+        description: "Sales surrogate key"
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: date_key
+        description: "Date key for sales period"
+      - name: store_key
+        description: "Store business key"
+      - name: product_key
+        description: "Product business key"
+      - name: store_name
+        description: "Store name"
+      - name: store_chain
+        description: "Store chain name"
+      - name: store_district
+        description: "Store district name"
+      - name: store_region
+        description: "Store region name"
+      - name: product
+        description: "Product name"
+      - name: product_brand
+        description: "Product brand name"
+      - name: product_category
+        description: "Product category name"
+      - name: product_subcategory
+        description: "Product subcategory name"
+      - name: product_supplier
+        description: "Product supplier name"
+      - name: sales_dollars
+        description: "Total sales dollars"
+      - name: sales_units
+        description: "Total sales units"
+        data_tests:
+        - fact_data_validation_w_query:
+          # Fact data validation test - comparing aggregated quantities with cleaned layer
+            to: ref('clean_grocery_connector_location_sales')
+            field: sales_units
+            aggregation: sum
+
+  - name: denormalized_grocery_connector_fact_inventory_location
+    description: "Denormalized inventory fact table with complete dimensional context"
+    columns:
+      - name: inventory_id
+        description: "Inventory surrogate key"
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: date_key
+        description: "Date key for inventory period"
+      - name: store_key
+        description: "Store business key"
+      - name: product_key
+        description: "Product business key"
+      - name: store_name
+        description: "Store name"
+      - name: store_chain
+        description: "Store chain name"
+      - name: store_district
+        description: "Store district name"
+      - name: store_region
+        description: "Store region name"
+      - name: product
+        description: "Product name"
+      - name: product_brand
+        description: "Product brand name"
+      - name: product_category
+        description: "Product category name"
+      - name: product_subcategory
+        description: "Product subcategory name"
+      - name: product_supplier
+        description: "Product supplier name"
+      - name: on_hand_units
+        description: "On hand inventory units"
+        data_tests:
+        - fact_data_validation_w_query:
+          # Fact data validation test - comparing aggregated quantities with cleaned layer
+            to: ref('clean_grocery_connector_location_inventory')
+            field: on_hand_units
+            aggregation: sum
+      - name: on_hand_dollars
+        description: "On hand inventory dollars"
+      - name: on_order_units
+        description: "On order inventory units"
+      - name: on_order_dollars
+        description: "On order inventory dollars"
+
+  - name: denormalized_grocery_connector_dim_item
+    description: "Denormalized item dimension with complete hierarchical context"
+    columns:
+      - name: item_id
+        description: "Item surrogate key"
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: item_key
+        description: "Item business key"
+      - name: item_name
+        description: "Item name"
+      - name: item_brand_name
+        description: "Item brand name"
+      - name: item_category_name
+        description: "Item category name"
+      - name: item_subcategory_name
+        description: "Item subcategory name"
+      - name: item_supplier_name
+        description: "Item supplier name"
+      - name: item_description
+        description: "Item description"
+      - name: item_size
+        description: "Item size"
+      - name: item_unit
+        description: "Item unit"
+      - name: item_status
+        description: "Item status"
+
+  - name: denormalized_grocery_connector_dim_location
+    description: "Denormalized location dimension with complete hierarchical context"
+    columns:
+      - name: location_id
+        description: "Location surrogate key"
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: location_key
+        description: "Location business key"
+      - name: location_name
+        description: "Location name"
+      - name: location_chain_name
+        description: "Location chain name"
+      - name: location_district_name
+        description: "Location district name"
+      - name: location_region_name
+        description: "Location region name"
+      - name: location_number
+        description: "Location number"
+      - name: location_type
+        description: "Location type"
+      - name: location_address
+        description: "Location address"
+      - name: location_city
+        description: "Location city"
+      - name: location_state
+        description: "Location state"
+      - name: location_zip
+        description: "Location zip code"
+      - name: location_country
+        description: "Location country"
+      - name: location_latitude
+        description: "Location latitude"
+      - name: location_longitude
+        description: "Location longitude"
+      - name: location_manager
+        description: "Location manager name"
+      - name: location_phone
+        description: "Location phone number"
+      - name: location_status
+        description: "Location status"

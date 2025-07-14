@@ -1,0 +1,310 @@
+version: 2
+
+models:
+  # Fact Tables
+  - name: normalized_grocery_connector_fact_sales
+    description: "Normalized location sales fact table with surrogate keys and foreign key relationships"
+    columns:
+      - name: sales_id
+        description: "Location sales surrogate key"
+        tests:
+          - unique
+          - not_null
+      - name: location_id
+        description: "Location surrogate key (foreign key)"
+        tests:
+          - relationships:
+              to: ref('normalized_grocery_connector_dim_location')
+              field: location_id
+      - name: item_id
+        description: "Item surrogate key (foreign key)"
+        tests:
+          - relationships:
+              to: ref('normalized_grocery_connector_dim_item')
+              field: item_id
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: date_key
+        description: "Date key for sales period"
+      - name: sales_dollars
+        description: "Total sales dollars"
+      - name: sales_units
+        description: "Total sales units"
+      - name: regular_sales_dollars
+        description: "Regular sales dollars"
+      - name: regular_sales_units
+        description: "Regular sales units"
+      - name: promotional_sales_dollars
+        description: "Promotional sales dollars"
+      - name: promotional_sales_units
+        description: "Promotional sales units"
+
+  - name: normalized_grocery_connector_fact_inventory_location
+    description: "Normalized location inventory fact table with surrogate keys and foreign key relationships"
+    columns:
+      - name: inventory_id
+        description: "Location inventory surrogate key"
+        tests:
+          - unique
+          - not_null
+      - name: location_id
+        description: "Location surrogate key (foreign key)"
+        tests:
+          - relationships:
+              to: ref('normalized_grocery_connector_dim_location')
+              field: location_id
+      - name: item_id
+        description: "Item surrogate key (foreign key)"
+        tests:
+          - relationships:
+              to: ref('normalized_grocery_connector_dim_item')
+              field: item_id
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: date_key
+        description: "Date key for inventory period"
+      - name: on_hand_units
+        description: "On hand inventory units"
+      - name: on_hand_dollars
+        description: "On hand inventory dollars"
+      - name: on_order_units
+        description: "On order inventory units"
+      - name: on_order_dollars
+        description: "On order inventory dollars"
+      - name: allocated_units
+        description: "Allocated inventory units"
+      - name: available_units
+        description: "Available inventory units"
+
+  # Dimension Tables
+  - name: normalized_grocery_connector_dim_item
+    description: "Normalized item dimension with surrogate keys and foreign key relationships"
+    columns:
+      - name: item_id
+        description: "Item surrogate key"
+        tests:
+          - unique
+          - not_null
+      - name: item_brand_id
+        description: "Item brand surrogate key (foreign key)"
+        tests:
+          - relationships:
+              to: ref('normalized_grocery_connector_dim_item_brand')
+              field: item_brand_id
+      - name: item_subcategory_id
+        description: "Item subcategory surrogate key (foreign key)"
+        tests:
+          - relationships:
+              to: ref('normalized_grocery_connector_dim_item_subcategory')
+              field: item_subcategory_id
+      - name: item_supplier_id
+        description: "Item supplier surrogate key (foreign key)"
+        tests:
+          - relationships:
+              to: ref('normalized_grocery_connector_dim_item_supplier')
+              field: item_supplier_id
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: item_key
+        description: "Item business key"
+      - name: item_name
+        description: "Item name"
+      - name: item_description
+        description: "Item description"
+      - name: item_size
+        description: "Item size"
+      - name: item_unit
+        description: "Item unit"
+      - name: item_status
+        description: "Item status"
+
+  - name: normalized_grocery_connector_dim_location
+    description: "Normalized location dimension with surrogate keys and foreign key relationships"
+    columns:
+      - name: location_id
+        description: "Location surrogate key"
+        tests:
+          - unique
+          - not_null
+      - name: location_chain_id
+        description: "Location chain surrogate key (foreign key)"
+        tests:
+          - relationships:
+              to: ref('normalized_grocery_connector_dim_location_chain')
+              field: location_chain_id
+      - name: location_district_id
+        description: "Location district surrogate key (foreign key)"
+        tests:
+          - relationships:
+              to: ref('normalized_grocery_connector_dim_location_district')
+              field: location_district_id
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: location_key
+        description: "Location business key"
+      - name: location_name
+        description: "Location name"
+      - name: location_number
+        description: "Location number"
+      - name: location_type
+        description: "Location type"
+      - name: location_address
+        description: "Location address"
+      - name: location_city
+        description: "Location city"
+      - name: location_state
+        description: "Location state"
+      - name: location_zip
+        description: "Location zip code"
+      - name: location_country
+        description: "Location country"
+      - name: location_latitude
+        description: "Location latitude"
+      - name: location_longitude
+        description: "Location longitude"
+      - name: location_manager
+        description: "Location manager name"
+      - name: location_phone
+        description: "Location phone number"
+      - name: location_status
+        description: "Location status"
+
+  # Lookup Dimensions
+  - name: normalized_grocery_connector_dim_item_brand
+    description: "Item brand dimension"
+    columns:
+      - name: item_brand_id
+        description: "Item brand surrogate key"
+        tests:
+          - unique
+          - not_null
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: item_brand_key
+        description: "Item brand business key"
+      - name: item_brand_name
+        description: "Item brand name"
+
+  - name: normalized_grocery_connector_dim_item_category
+    description: "Item category dimension"
+    columns:
+      - name: item_category_id
+        description: "Item category surrogate key"
+        tests:
+          - unique
+          - not_null
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: item_category_key
+        description: "Item category business key"
+      - name: item_category_name
+        description: "Item category name"
+
+  - name: normalized_grocery_connector_dim_item_subcategory
+    description: "Item subcategory dimension"
+    columns:
+      - name: item_subcategory_id
+        description: "Item subcategory surrogate key"
+        tests:
+          - unique
+          - not_null
+      - name: item_category_id
+        description: "Item category surrogate key (foreign key)"
+        tests:
+          - relationships:
+              to: ref('normalized_grocery_connector_dim_item_category')
+              field: item_category_id
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: item_subcategory_key
+        description: "Item subcategory business key"
+      - name: item_subcategory_name
+        description: "Item subcategory name"
+
+  - name: normalized_grocery_connector_dim_item_supplier
+    description: "Item supplier dimension"
+    columns:
+      - name: item_supplier_id
+        description: "Item supplier surrogate key"
+        tests:
+          - unique
+          - not_null
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: item_supplier_key
+        description: "Item supplier business key"
+      - name: item_supplier_name
+        description: "Item supplier name"
+
+  - name: normalized_grocery_connector_dim_location_chain
+    description: "Location chain dimension"
+    columns:
+      - name: location_chain_id
+        description: "Location chain surrogate key"
+        tests:
+          - unique
+          - not_null
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: location_chain_key
+        description: "Location chain business key"
+      - name: location_chain_name
+        description: "Location chain name"
+
+  - name: normalized_grocery_connector_dim_location_district
+    description: "Location district dimension"
+    columns:
+      - name: location_district_id
+        description: "Location district surrogate key"
+        tests:
+          - unique
+          - not_null
+      - name: location_region_id
+        description: "Location region surrogate key (foreign key)"
+        tests:
+          - relationships:
+              to: ref('normalized_grocery_connector_dim_location_region')
+              field: location_region_id
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: location_district_key
+        description: "Location district business key"
+      - name: location_district_name
+        description: "Location district name"
+
+  - name: normalized_grocery_connector_dim_location_region
+    description: "Location region dimension"
+    columns:
+      - name: location_region_id
+        description: "Location region surrogate key"
+        tests:
+          - unique
+          - not_null
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: location_region_key
+        description: "Location region business key"
+      - name: location_region_name
+        description: "Location region name" 

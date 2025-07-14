@@ -1,0 +1,196 @@
+version: 2
+
+models:
+  - name: source_grocery_connector_location_sales
+    description: "Deduplicated grocery connector location sales data using row number prioritization"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: report_date
+        description: "Date of the sales report"
+      - name: location_key
+        description: "Location business key"
+      - name: item_key
+        description: "Item business key"
+      - name: upc
+        description: "Universal Product Code"
+      - name: begin_date
+        description: "Period begin date"
+      - name: end_date
+        description: "Period end date"
+      - name: sales_dollars
+        description: "Total sales dollars"
+      - name: sales_units
+        description: "Total sales units"
+      - name: regular_sales_dollars
+        description: "Regular sales dollars"
+      - name: regular_sales_units
+        description: "Regular sales units"
+      - name: promotional_sales_dollars
+        description: "Promotional sales dollars"
+      - name: promotional_sales_units
+        description: "Promotional sales units"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - account_id
+            - connector_id
+            - location_key
+            - item_key
+            - report_date
+          config:
+            severity: error
+
+  - name: source_grocery_connector_location_inventory
+    description: "Deduplicated grocery connector location inventory data using row number prioritization"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: report_date
+        description: "Date of the inventory report"
+      - name: location_key
+        description: "Location business key"
+      - name: item_key
+        description: "Item business key"
+      - name: upc
+        description: "Universal Product Code"
+      - name: on_hand_units
+        description: "On hand inventory units"
+      - name: on_hand_dollars
+        description: "On hand inventory dollars"
+      - name: on_order_units
+        description: "On order inventory units"
+      - name: on_order_dollars
+        description: "On order inventory dollars"
+      - name: allocated_units
+        description: "Allocated inventory units"
+      - name: available_units
+        description: "Available inventory units"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - account_id
+            - connector_id
+            - location_key
+            - item_key
+            - report_date
+          config:
+            severity: error
+
+  - name: source_grocery_connector_item_master
+    description: "Deduplicated grocery connector item master data using row number prioritization"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: report_date
+        description: "Date of the item master report"
+      - name: item_key
+        description: "Item business key"
+      - name: item_name
+        description: "Item name"
+      - name: brand_key
+        description: "Brand business key"
+      - name: brand
+        description: "Brand name"
+      - name: category_key
+        description: "Category business key"
+      - name: category
+        description: "Category name"
+      - name: subcategory_key
+        description: "Subcategory business key"
+      - name: subcategory
+        description: "Subcategory name"
+      - name: supplier_key
+        description: "Supplier business key"
+      - name: supplier_name
+        description: "Supplier name"
+      - name: upc
+        description: "Universal Product Code"
+      - name: pack_size
+        description: "Item pack size"
+      - name: unit_of_measure
+        description: "Unit of measure"
+      - name: item_description
+        description: "Item description"
+      - name: item_status
+        description: "Item status"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - account_id
+            - connector_id
+            - item_key
+          config:
+            severity: error
+
+  - name: source_grocery_connector_location_master
+    description: "Deduplicated grocery connector location master data using row number prioritization"
+    columns:
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: ingestion_timestamp
+        description: "Timestamp when data was ingested"
+      - name: report_date
+        description: "Date of the location master report"
+      - name: chain_key
+        description: "Chain business key"
+      - name: chain
+        description: "Chain name"
+      - name: location_key
+        description: "Location business key"
+      - name: location_name
+        description: "Location name"
+      - name: location_number
+        description: "Location number"
+      - name: location_type
+        description: "Location type"
+      - name: location_address
+        description: "Location address"
+      - name: location_city
+        description: "Location city"
+      - name: location_state
+        description: "Location state"
+      - name: location_zip
+        description: "Location zip code"
+      - name: location_country
+        description: "Location country"
+      - name: location_latitude
+        description: "Location latitude"
+      - name: location_longitude
+        description: "Location longitude"
+      - name: location_manager
+        description: "Location manager name"
+      - name: location_phone
+        description: "Location phone number"
+      - name: location_status
+        description: "Location status"
+      - name: district_key
+        description: "District business key"
+      - name: district
+        description: "District name"
+      - name: region_key
+        description: "Region business key"
+      - name: region
+        description: "Region name"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - account_id
+            - connector_id
+            - location_key
+          config:
+            severity: error 
