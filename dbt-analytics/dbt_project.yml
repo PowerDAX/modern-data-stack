@@ -1,0 +1,360 @@
+# Modern Data Stack Showcase - dbt Project
+# Demonstrates enterprise-grade data transformation patterns
+
+name: 'modern_data_stack_showcase'
+version: '1.0.0'
+config-version: 2
+require-dbt-version: [">=1.8.0", "<2.0.0"]
+
+# Profile configuration
+profile: 'modern_data_stack_showcase'
+
+# Path configurations
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+docs-paths: ["docs"]
+
+# Advanced query commenting and labeling for cost tracking and monitoring
+query-comment:
+  comment: "{{ query_comment() }}"
+  job-label: true
+
+# Target directories for cleanup
+clean-targets:
+  - "target"
+  - "dbt_packages"
+  - "logs"
+
+# Global variables configuration
+vars:
+  # Data Quality Configuration
+  data_quality_threshold: 50
+  fact_quality_threshold: 75
+  completeness_threshold: 0.8
+  
+  # Business Logic Configuration
+  sales_amount_max_threshold: 10000
+  sales_quantity_max_threshold: 1000
+  upc_length_standard: 12
+  
+  # Date Range Configuration
+  data_start_date: '2020-01-01'
+  lookback_days: 7
+  late_arriving_data_days: 3
+  
+  # Performance Configuration
+  partition_field: 'transaction_date'
+  clustering_fields: ['store_id', 'product_upc']
+  
+  # Environment Configuration
+  target_environment: 'dev'
+  enable_audit_logging: true
+  enable_data_profiling: true
+  
+  # Incremental Loading Configuration
+  incremental_strategy: 'merge'
+  merge_update_columns: ['sales_amount', 'sales_quantity', 'unit_price']
+  
+  # Feature Flags
+  is_category_advisor: false
+  enable_cross_connector_analytics: true
+  enable_harmonized_models: true
+  
+  # Mock Data Configuration
+  use_mock_data: "{{ env_var('USE_MOCK_DATA', 'false') }}"
+
+# Model configurations with layered architecture
+models:
+  modern_data_stack_showcase:
+    # Global configurations with audit support
+    +on_schema_change: "sync_all_columns"
+    +post-hook:
+      - "{{ audit_model_execution() }}"
+
+# Seed configurations for mock data
+seeds:
+  modern_data_stack_showcase:
+    mock:
+      +schema: "{{ target.schema }}_mock"
+      +materialized: table
+      +post-hook:
+        - "{{ audit_model_execution() }}"
+      retail_connector:
+        +tags: ["mock_data", "retail_connector"]
+        +meta:
+          connector_type: "retail"
+          mock_data_source: "generated"
+      grocery_connector:
+        +tags: ["mock_data", "grocery_connector"]
+        +meta:
+          connector_type: "grocery"
+          mock_data_source: "generated"
+    
+    # ELT layer configurations
+    elt:
+      +schema: elt
+      +tags: ["dataset:elt"]
+      +meta:
+        owner: "data_engineering"
+        contact: "data-eng@company.com"
+      
+      # Retail connector models
+      retail_connector:
+        +tags: ["module:retail_connector"]
+        +meta:
+          source_system: "retail_pos"
+          data_classification: "internal"
+        
+        # Direct layer - raw data ingestion
+        direct:
+          +materialized: incremental
+          +unique_key: "transaction_id"
+          +incremental_strategy: "merge"
+          +partition_by: {'field': 'transaction_date', 'data_type': 'date'}
+          +cluster_by: ['store_id', 'product_upc']
+          +tags: ["event_driven", "feature:direct"]
+          +meta:
+            layer: "direct"
+            update_frequency: "hourly"
+            data_latency: "1_hour"
+        
+        # Source layer - data standardization
+        source:
+          +materialized: incremental
+          +unique_key: "transaction_id"
+          +incremental_strategy: "merge"
+          +partition_by: {'field': 'transaction_date', 'data_type': 'timestamp'}
+          +cluster_by: ['store_id', 'product_upc', 'transaction_date_key']
+          +tags: ["event_driven", "feature:source"]
+          +meta:
+            layer: "source"
+            update_frequency: "hourly"
+            data_latency: "1_hour"
+        
+        # Cleaned layer - data quality improvements
+        cleaned:
+          +materialized: incremental
+          +unique_key: "transaction_id"
+          +incremental_strategy: "merge"
+          +tags: ["event_driven", "feature:cleaned"]
+          +meta:
+            layer: "cleaned"
+            data_quality_applied: true
+        
+        # Staging layer - business transformations
+        staging:
+          +materialized: incremental
+          +unique_key: "transaction_id"
+          +incremental_strategy: "merge"
+          +tags: ["event_driven", "feature:staging"]
+          +meta:
+            layer: "staging"
+            business_logic_applied: true
+        
+        # Normalized layer - dimensional modeling
+        normalized:
+          +materialized: incremental
+          +unique_key: "transaction_key"
+          +incremental_strategy: "merge"
+          +partition_by: {'field': 'transaction_date', 'data_type': 'timestamp'}
+          +cluster_by: ['store_key', 'product_key', 'date_key']
+          +tags: ["event_driven", "feature:normalized"]
+          +meta:
+            layer: "normalized"
+            model_type: "fact"
+            grain: "transaction"
+            update_frequency: "hourly"
+            data_latency: "2_hours"
+        
+        # Denormalized layer - analytics-ready data
+        denormalized:
+          +materialized: incremental
+          +unique_key: "transaction_key"
+          +incremental_strategy: "merge"
+          +tags: ["event_driven", "feature:denormalized"]
+          +meta:
+            layer: "denormalized"
+            optimized_for: "analytics"
+      
+      # Grocery connector models
+      grocery_connector:
+        +tags: ["module:grocery_connector"]
+        +meta:
+          source_system: "grocery_pos"
+          data_classification: "internal"
+        
+        # Direct layer - raw data ingestion
+        direct:
+          +materialized: incremental
+          +unique_key: "transaction_id"
+          +incremental_strategy: "merge"
+          +partition_by: {'field': 'transaction_date', 'data_type': 'date'}
+          +cluster_by: ['store_id', 'product_upc']
+          +tags: ["event_driven", "feature:direct"]
+          +meta:
+            layer: "direct"
+            update_frequency: "hourly"
+            data_latency: "1_hour"
+        
+        # Source layer - data standardization
+        source:
+          +materialized: incremental
+          +unique_key: "transaction_id"
+          +incremental_strategy: "merge"
+          +partition_by: {'field': 'transaction_date', 'data_type': 'timestamp'}
+          +cluster_by: ['store_id', 'product_upc', 'transaction_date_key']
+          +tags: ["event_driven", "feature:source"]
+          +meta:
+            layer: "source"
+            update_frequency: "hourly"
+            data_latency: "1_hour"
+        
+        # Cleaned layer - data quality improvements
+        cleaned:
+          +materialized: incremental
+          +unique_key: "transaction_id"
+          +incremental_strategy: "merge"
+          +tags: ["event_driven", "feature:cleaned"]
+          +meta:
+            layer: "cleaned"
+            data_quality_applied: true
+        
+        # Staging layer - business transformations
+        staging:
+          +materialized: incremental
+          +unique_key: "transaction_id"
+          +incremental_strategy: "merge"
+          +tags: ["event_driven", "feature:staging"]
+          +meta:
+            layer: "staging"
+            business_logic_applied: true
+        
+        # Normalized layer - dimensional modeling
+        normalized:
+          +materialized: incremental
+          +unique_key: "transaction_key"
+          +incremental_strategy: "merge"
+          +partition_by: {'field': 'transaction_date', 'data_type': 'timestamp'}
+          +cluster_by: ['store_key', 'product_key', 'date_key']
+          +tags: ["event_driven", "feature:normalized"]
+          +meta:
+            layer: "normalized"
+            model_type: "fact"
+            grain: "transaction"
+            update_frequency: "hourly"
+            data_latency: "2_hours"
+        
+        # Denormalized layer - analytics-ready data
+        denormalized:
+          +materialized: incremental
+          +unique_key: "transaction_key"
+          +incremental_strategy: "merge"
+          +tags: ["event_driven", "feature:denormalized"]
+          +meta:
+            layer: "denormalized"
+            optimized_for: "analytics"
+      
+      # Harmonized models - cross-connector integration
+      harmonized:
+        +materialized: incremental
+        +incremental_strategy: "merge"
+        +partition_by: {'field': 'sales_date', 'data_type': 'date'}
+        +cluster_by: ['connector_source', 'store_key', 'product_key']
+        +tags: ["event_driven", "module:cross_connector", "feature:harmonized"]
+        +meta:
+          layer: "harmonized"
+          model_type: "cross_connector"
+          update_frequency: "daily"
+          data_latency: "6_hours"
+    
+    # Analytics layer configurations
+    analytics:
+      +schema: analytics
+      +tags: ["dataset:analytics"]
+      +meta:
+        owner: "analytics"
+        contact: "analytics@company.com"
+      
+      # Retail connector analytics
+      retail_connector:
+        +materialized: incremental
+        +incremental_strategy: "merge"
+        +partition_by: {'field': 'sales_date', 'data_type': 'date'}
+        +cluster_by: ['store_key', 'product_key']
+        +tags: ["event_driven", "module:retail_connector", "feature:analytics"]
+        +meta:
+          layer: "analytics"
+          model_type: "aggregate"
+          update_frequency: "daily"
+          data_latency: "4_hours"
+      
+      # Grocery connector analytics
+      grocery_connector:
+        +materialized: incremental
+        +incremental_strategy: "merge"
+        +partition_by: {'field': 'sales_date', 'data_type': 'date'}
+        +cluster_by: ['store_key', 'product_key']
+        +tags: ["event_driven", "module:grocery_connector", "feature:analytics"]
+        +meta:
+          layer: "analytics"
+          model_type: "aggregate"
+          update_frequency: "daily"
+          data_latency: "4_hours"
+
+# Snapshot configurations
+snapshots:
+  modern_data_stack_showcase:
+    +target_schema: snapshots
+    +strategy: timestamp
+    +updated_at: updated_at
+    +tags: ["snapshot", "scd"]
+
+# Seed configurations
+seeds:
+  modern_data_stack_showcase:
+    +schema: seeds
+    +tags: ["seed", "reference_data"]
+
+# Test configurations
+tests:
+  +store_failures: true
+  +schema: data_quality_failures
+  +tags: ["data_quality"]
+
+# Macro dispatch configuration
+dispatch:
+  - macro_namespace: dbt_utils
+    search_order: ['modern_data_stack_showcase', 'dbt_utils']
+  - macro_namespace: dbt_expectations
+    search_order: ['modern_data_stack_showcase', 'dbt_expectations']
+
+# Documentation configurations
+docs:
+  node_colors:
+    "feature:direct": "#E8F4FD"
+    "feature:source": "#D1F2EB"
+    "feature:cleaned": "#FCF3CF"
+    "feature:staging": "#FADBD8"
+    "feature:normalized": "#D5DBDB"
+    "feature:denormalized": "#D6EAF8"
+    "feature:analytics": "#E8DAEF"
+    "feature:harmonized": "#D4EDDA"
+    "module:retail_connector": "#FFF3CD"
+    "module:grocery_connector": "#E8F8F5"
+    "dataset:elt": "#E1F5FE"
+    "dataset:analytics": "#F3E5F5"
+
+# Performance optimization settings
+quoting:
+  database: false
+  schema: false
+  identifier: false
+
+# Logging configuration
+logs:
+  use_colors: true
+  level: INFO 

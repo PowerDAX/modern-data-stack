@@ -1,0 +1,11 @@
+account_id,connector_id,product_key,product,product_brand,product_category,product_subcategory,product_supplier,upc,pack_size,unit_of_measure,product_description,product_status,ingestion_timestamp
+ACC001,retail_connector,PD001,Premium Whole Milk,Dairy Fresh,Dairy,Milk,Farmland Dairy,012345678901,1 Gallon,Gallon,Fresh whole milk from local farms,active,2024-01-15 08:00:00
+ACC001,retail_connector,PD002,Organic Bananas,Fresh Start,Produce,Fruits,Tropical Farms,012345678902,3 lbs,Pound,Organic yellow bananas,active,2024-01-15 08:00:00
+ACC001,retail_connector,PD003,Artisan Bread Loaf,Baker's Choice,Bakery,Breads,Local Bakery,012345678903,24 oz,Ounce,Fresh baked sourdough bread,active,2024-01-15 08:00:00
+ACC001,retail_connector,PD004,Ground Beef 80/20,Butcher's Best,Meat,Ground Meat,Prime Meats,012345678904,1 lb,Pound,Fresh ground beef 80% lean,active,2024-01-15 08:00:00
+ACC001,retail_connector,PD005,Chicken Breast,Farm Fresh,Meat,Poultry,Poultry Plus,012345678905,2 lbs,Pound,Boneless skinless chicken breast,active,2024-01-15 08:00:00
+ACC001,retail_connector,PD006,Cheddar Cheese Block,Dairy Delights,Dairy,Cheese,Cheese Masters,012345678906,8 oz,Ounce,Sharp cheddar cheese block,active,2024-01-15 08:00:00
+ACC001,retail_connector,PD007,Mixed Greens Salad,Garden Fresh,Produce,Vegetables,Green Valley,012345678907,5 oz,Ounce,Organic mixed spring greens,active,2024-01-15 08:00:00
+ACC001,retail_connector,PD008,Tomato Soup Can,Campbell's Classic,Pantry,Canned Goods,Campbell Foods,012345678908,10.75 oz,Ounce,Classic tomato soup,active,2024-01-15 08:00:00
+ACC001,retail_connector,PD009,Breakfast Cereal,Morning Crunch,Pantry,Cereals,Cereal Co,012345678909,18 oz,Ounce,Whole grain breakfast cereal,active,2024-01-15 08:00:00
+ACC001,retail_connector,PD010,Ice Cream Vanilla,Creamy Dreams,Frozen,Ice Cream,Frozen Treats,012345678910,1.5 qt,Quart,Premium vanilla ice cream,active,2024-01-15 08:00:00 

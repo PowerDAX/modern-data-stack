@@ -1,0 +1,11 @@
+account_id,connector_id,location_key,item_key,report_date,sales_dollars,sales_units,regular_sales_dollars,regular_sales_units,promotional_sales_dollars,promotional_sales_units,ingestion_timestamp
+ACC001,grocery_connector,LOC001,IT001,2024-01-14,17.97,3,11.98,2,5.99,1,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC001,IT002,2024-01-14,12.98,2,12.98,2,0.00,0,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC002,IT003,2024-01-14,21.99,1,21.99,1,0.00,0,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC002,IT004,2024-01-14,24.99,1,19.99,1,5.00,0,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC003,IT005,2024-01-14,14.98,2,14.98,2,0.00,0,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC003,IT006,2024-01-14,8.97,3,5.98,2,2.99,1,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC004,IT007,2024-01-14,15.96,4,11.96,3,3.99,1,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC004,IT008,2024-01-14,18.99,1,18.99,1,0.00,0,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC005,IT009,2024-01-14,11.98,2,11.98,2,0.00,0,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC005,IT010,2024-01-14,7.98,3,5.99,2,1.99,1,2024-01-15 08:00:00 

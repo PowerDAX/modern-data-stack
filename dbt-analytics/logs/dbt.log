@@ -1,0 +1,13 @@
+[0m16:07:40.897262 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x107db8ce0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x107db8530>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x107dd1250>]}
+
+
+============================== 16:07:40.900639 | 0d862464-adb6-4ce9-88d4-a39fe2cbd70a ==============================
+[0m16:07:40.900639 [info ] [MainThread]: Running with dbt=1.8.6
+[0m16:07:40.901092 [debug] [MainThread]: running dbt with arguments {'printer_width': '80', 'indirect_selection': 'eager', 'log_cache_events': 'False', 'write_json': 'True', 'partial_parse': 'True', 'cache_selected_only': 'False', 'warn_error': 'None', 'fail_fast': 'False', 'version_check': 'True', 'log_path': '/Users/adamharper/Repos/.cursor/projects/modern-data-stack-showcase/dbt-analytics/logs', 'debug': 'False', 'profiles_dir': '/Users/adamharper/.dbt', 'use_colors': 'True', 'use_experimental_parser': 'False', 'no_print': 'None', 'quiet': 'False', 'empty': 'False', 'log_format': 'default', 'static_parser': 'True', 'invocation_command': 'dbt compile --select normalized_retail_connector_fact_sales', 'warn_error_options': 'WarnErrorOptions(include=[], exclude=[])', 'target_path': 'None', 'introspect': 'True', 'send_anonymous_usage_stats': 'True'}
+[0m16:07:40.904660 [error] [MainThread]: Encountered an error:
+Runtime Error
+  Could not find profile named 'modern_data_stack_showcase'
+[0m16:07:40.909242 [debug] [MainThread]: Resource report: {"command_name": "compile", "command_wall_clock_time": 0.073373415, "process_user_time": 0.691175, "process_kernel_time": 0.138391, "process_mem_max_rss": "95731712", "command_success": false, "process_in_blocks": "0", "process_out_blocks": "0"}
+[0m16:07:40.909780 [debug] [MainThread]: Command `dbt compile` failed at 16:07:40.909696 after 0.07 seconds
+[0m16:07:40.910064 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x107d9b920>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1076f5c40>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x104cb5910>]}
+[0m16:07:40.910309 [debug] [MainThread]: Flushing usage events

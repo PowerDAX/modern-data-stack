@@ -1,0 +1,11 @@
+account_id,connector_id,store_key,product_key,report_date,on_hand_quantity,on_hand_amount,on_order_quantity,on_order_amount,ingestion_timestamp
+ACC001,retail_connector,ST001,PD001,2024-01-14,25,124.75,10,49.90,2024-01-15 08:00:00
+ACC001,retail_connector,ST001,PD002,2024-01-14,48,143.52,20,59.80,2024-01-15 08:00:00
+ACC001,retail_connector,ST002,PD003,2024-01-14,12,95.88,5,39.95,2024-01-15 08:00:00
+ACC001,retail_connector,ST002,PD004,2024-01-14,18,135.00,8,60.00,2024-01-15 08:00:00
+ACC001,retail_connector,ST003,PD005,2024-01-14,15,299.85,6,119.94,2024-01-15 08:00:00
+ACC001,retail_connector,ST003,PD006,2024-01-14,22,140.25,12,76.50,2024-01-15 08:00:00
+ACC001,retail_connector,ST004,PD007,2024-01-14,30,224.70,15,112.35,2024-01-15 08:00:00
+ACC001,retail_connector,ST004,PD008,2024-01-14,36,77.40,18,38.70,2024-01-15 08:00:00
+ACC001,retail_connector,ST005,PD009,2024-01-14,24,239.76,10,99.90,2024-01-15 08:00:00
+ACC001,retail_connector,ST005,PD010,2024-01-14,18,269.82,8,119.92,2024-01-15 08:00:00 

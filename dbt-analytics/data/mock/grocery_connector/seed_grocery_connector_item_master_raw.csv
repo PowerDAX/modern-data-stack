@@ -1,0 +1,11 @@
+account_id,connector_id,item_key,item_name,item_brand_name,item_category_name,item_subcategory_name,item_supplier_name,item_description,item_size,item_unit,item_status,ingestion_timestamp
+ACC001,grocery_connector,IT001,Organic Apples,Nature's Best,Fresh Produce,Fruits,Organic Farms,Fresh organic Honeycrisp apples,3 lbs,Pound,active,2024-01-15 08:00:00
+ACC001,grocery_connector,IT002,Almond Milk,Nutty Goodness,Dairy Alternatives,Plant-Based Milk,Plant Power Co,Unsweetened almond milk,32 fl oz,Fluid Ounce,active,2024-01-15 08:00:00
+ACC001,grocery_connector,IT003,Quinoa Grain,Ancient Grains,Pantry Staples,Grains,Wholesome Foods,Organic quinoa grain,16 oz,Ounce,active,2024-01-15 08:00:00
+ACC001,grocery_connector,IT004,Salmon Fillet,Ocean Fresh,Seafood,Fresh Fish,Coastal Catch,Wild-caught salmon fillet,1 lb,Pound,active,2024-01-15 08:00:00
+ACC001,grocery_connector,IT005,Greek Yogurt,Creamy Culture,Dairy,Yogurt,Dairy Delights,Plain Greek yogurt,32 oz,Ounce,active,2024-01-15 08:00:00
+ACC001,grocery_connector,IT006,Avocado,Green Gold,Fresh Produce,Vegetables,Tropical Farms,Fresh Hass avocados,Each,Each,active,2024-01-15 08:00:00
+ACC001,grocery_connector,IT007,Kombucha Tea,Probiotic Plus,Beverages,Fermented Drinks,Gut Health Co,Ginger kombucha tea,16 fl oz,Fluid Ounce,active,2024-01-15 08:00:00
+ACC001,grocery_connector,IT008,Chia Seeds,Super Seeds,Health Foods,Seeds & Nuts,Nutrition Source,Organic chia seeds,12 oz,Ounce,active,2024-01-15 08:00:00
+ACC001,grocery_connector,IT009,Sweet Potato,Earth's Harvest,Fresh Produce,Vegetables,Root & Vine,Organic sweet potatoes,2 lbs,Pound,active,2024-01-15 08:00:00
+ACC001,grocery_connector,IT010,Coconut Water,Tropical Pure,Beverages,Natural Drinks,Island Fresh,Pure coconut water,16.9 fl oz,Fluid Ounce,active,2024-01-15 08:00:00 

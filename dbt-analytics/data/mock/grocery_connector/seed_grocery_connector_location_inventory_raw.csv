@@ -1,0 +1,11 @@
+account_id,connector_id,location_key,item_key,report_date,inventory_units,inventory_dollars,allocated_units,available_units,ingestion_timestamp
+ACC001,grocery_connector,LOC001,IT001,2024-01-14,45,269.55,5,40,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC001,IT002,2024-01-14,28,181.72,3,25,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC002,IT003,2024-01-14,15,329.85,2,13,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC002,IT004,2024-01-14,12,299.88,1,11,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC003,IT005,2024-01-14,32,239.68,4,28,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC003,IT006,2024-01-14,60,179.40,8,52,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC004,IT007,2024-01-14,24,95.76,0,24,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC004,IT008,2024-01-14,18,341.82,2,16,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC005,IT009,2024-01-14,35,209.65,6,29,2024-01-15 08:00:00
+ACC001,grocery_connector,LOC005,IT010,2024-01-14,48,127.68,3,45,2024-01-15 08:00:00 

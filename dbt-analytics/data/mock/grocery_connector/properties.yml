@@ -1,0 +1,92 @@
+version: 2
+
+seeds:
+  # Grocery Connector Mock Data
+  - name: seed_grocery_connector_location_sales_raw
+    description: "Mock location sales data for grocery connector testing"
+    config:
+      column_types:
+        account_id: string
+        connector_id: string
+        ingestion_timestamp: timestamp
+        report_date: date
+        location_key: string
+        item_key: string
+        upc: string
+        begin_date: date
+        end_date: date
+        sales_dollars: numeric
+        sales_units: numeric
+        regular_sales_dollars: numeric
+        regular_sales_units: numeric
+        promotional_sales_dollars: numeric
+        promotional_sales_units: numeric
+
+  - name: seed_grocery_connector_location_inventory_raw
+    description: "Mock location inventory data for grocery connector testing"
+    config:
+      column_types:
+        account_id: string
+        connector_id: string
+        ingestion_timestamp: timestamp
+        report_date: date
+        location_key: string
+        item_key: string
+        upc: string
+        inventory_units: numeric
+        inventory_dollars: numeric
+        allocated_units: numeric
+        available_units: numeric
+
+  - name: seed_grocery_connector_item_master_raw
+    description: "Mock item master data for grocery connector testing"
+    config:
+      column_types:
+        account_id: string
+        connector_id: string
+        ingestion_timestamp: timestamp
+        report_date: date
+        item_key: string
+        item_name: string
+        brand_key: string
+        brand: string
+        category_key: string
+        category: string
+        sub_category_key: string
+        sub_category: string
+        supplier_key: string
+        supplier_name: string
+        upc: string
+        pack_size: string
+        unit_of_measure: string
+        item_description: string
+        item_status: string
+
+  - name: seed_grocery_connector_location_master_raw
+    description: "Mock location master data for grocery connector testing"
+    config:
+      column_types:
+        account_id: string
+        connector_id: string
+        ingestion_timestamp: timestamp
+        report_date: date
+        chain_key: string
+        chain: string
+        location_key: string
+        location_name: string
+        location_number: string
+        location_type: string
+        location_address: string
+        location_city: string
+        location_state: string
+        location_zip: string
+        location_country: string
+        location_latitude: numeric
+        location_longitude: numeric
+        location_manager: string
+        location_phone: string
+        location_status: string
+        district_key: string
+        district: string
+        region_key: string
+        region: string 

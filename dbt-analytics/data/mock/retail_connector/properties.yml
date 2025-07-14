@@ -1,0 +1,88 @@
+version: 2
+
+seeds:
+  # Retail Connector Mock Data
+  - name: seed_retail_connector_store_sales_raw
+    description: "Mock store sales data for retail connector testing"
+    config:
+      column_types:
+        account_id: string
+        connector_id: string
+        ingestion_timestamp: timestamp
+        report_date: date
+        store_key: string
+        product_key: string
+        upc: string
+        begin_date: date
+        end_date: date
+        sales_amount: numeric
+        sales_quantity: numeric
+
+  - name: seed_retail_connector_store_inventory_raw
+    description: "Mock store inventory data for retail connector testing"
+    config:
+      column_types:
+        account_id: string
+        connector_id: string
+        ingestion_timestamp: timestamp
+        report_date: date
+        store_key: string
+        product_key: string
+        upc: string
+        on_hand_quantity: numeric
+        on_hand_amount: numeric
+        on_order_quantity: numeric
+        on_order_amount: numeric
+
+  - name: seed_retail_connector_product_master_raw
+    description: "Mock product master data for retail connector testing"
+    config:
+      column_types:
+        account_id: string
+        connector_id: string
+        ingestion_timestamp: timestamp
+        report_date: date
+        product_key: string
+        product_name: string
+        brand_key: string
+        brand: string
+        category_key: string
+        category: string
+        subcategory_key: string
+        subcategory: string
+        supplier_key: string
+        supplier_name: string
+        upc: string
+        pack_size: string
+        unit_of_measure: string
+        product_description: string
+        product_status: string
+
+  - name: seed_retail_connector_store_master_raw
+    description: "Mock store master data for retail connector testing"
+    config:
+      column_types:
+        account_id: string
+        connector_id: string
+        ingestion_timestamp: timestamp
+        report_date: date
+        chain_key: string
+        chain: string
+        store_key: string
+        store_name: string
+        store_number: string
+        store_type: string
+        store_address: string
+        store_city: string
+        store_state: string
+        store_zip: string
+        store_country: string
+        store_latitude: numeric
+        store_longitude: numeric
+        store_manager: string
+        store_phone: string
+        store_status: string
+        district_key: string
+        district: string
+        region_key: string
+        region: string

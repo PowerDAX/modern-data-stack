@@ -1,0 +1,28 @@
+packages:
+  # Essential dbt utilities for advanced transformations
+  - package: dbt-labs/dbt_utils
+    version: 1.1.1
+
+  # Data quality and testing framework
+  - package: calogica/dbt_expectations
+    version: 0.10.3
+
+  # Audit and data lineage utilities
+  - package: dbt-labs/audit_helper
+    version: 0.12.0
+
+  # Machine learning utilities
+  - package: kristeligt-dagblad/dbt_ml
+    version: 0.6.0
+
+  # Unit testing framework
+  - package: yu-iskw/dbt_unittest
+    version: 0.4.0
+
+  # External table utilities (for cloud data sources)
+  - package: dbt-labs/dbt_external_tables
+    version: 0.8.7
+
+  # Advanced date and time utilities
+  - package: calogica/dbt_date
+    version: 0.10.1 
