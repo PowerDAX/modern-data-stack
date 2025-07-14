@@ -1,0 +1,17 @@
+/// Expression to determine the connector model type for partition queries
+expression ConnectorModel = "harmonized"
+
+/// Expression for the data source server
+expression DataSourceServer = "your-postgresql-server"
+
+/// Expression for the database name
+expression DataSourceDatabase = "your-database-name"
+
+/// Table name prefix for harmonized tables
+expression HarmonizedPrefix = "analytics_harmonized_"
+
+/// Table name prefix for grocery connector tables
+expression GroceryConnectorPrefix = "analytics_grocery_connector_"
+
+/// Table name prefix for retail connector tables
+expression RetailConnectorPrefix = "analytics_retail_connector_" 

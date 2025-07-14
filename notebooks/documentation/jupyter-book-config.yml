@@ -1,0 +1,204 @@
+# Jupyter Book configuration for Modern Data Stack Showcase
+# This configuration generates comprehensive documentation from notebooks
+
+title: "Modern Data Stack Showcase - Jupyter Notebooks Documentation"
+author: "Data Science Team"
+logo: "assets/logo.png"
+copyright: "2024"
+
+# Repository configuration
+repository:
+  url: https://github.com/your-org/modern-data-stack-showcase
+  path_to_book: notebooks/documentation
+  branch: main
+
+# HTML configuration
+html:
+  favicon: "assets/favicon.ico"
+  use_issues_button: true
+  use_repository_button: true
+  use_edit_page_button: true
+  use_download_button: true
+  use_fullscreen_button: true
+  home_page_in_navbar: true
+  navbar_number_sections: true
+  announcement: "📊 Modern Data Stack Showcase - Interactive Jupyter Notebooks Documentation"
+  google_analytics_id: "G-YOUR-ANALYTICS-ID"
+
+# LaTeX configuration (for PDF generation)
+latex:
+  latex_documents:
+    targetname: modern-data-stack-showcase-notebooks.tex
+    title: "Modern Data Stack Showcase - Jupyter Notebooks Documentation"
+    author: "Data Science Team"
+  latex_engine: pdflatex
+
+# Execution configuration
+execute:
+  execute_notebooks: "cache"
+  cache: ".jupyter_cache"
+  timeout: 300
+  stderr_output: "show"
+  allow_errors: false
+  run_in_temp: false
+
+# Parse configuration
+parse:
+  myst_enable_extensions:
+    - dollarmath
+    - amsmath
+    - deflist
+    - html_admonition
+    - html_image
+    - colon_fence
+    - smartquotes
+    - replacements
+    - linkify
+    - strikethrough
+    - tasklist
+    - fieldlist
+    - attrs_inline
+    - attrs_block
+
+# Sphinx configuration
+sphinx:
+  extra_extensions:
+    - sphinx_inline_tabs
+    - sphinx_proof
+    - sphinx_examples
+    - sphinx_togglebutton
+    - sphinx_copybutton
+    - sphinxext.opengraph
+    - sphinx_comments
+    - sphinx_external_toc
+    - sphinx_multitoc_numbering
+    - sphinx_design
+    - sphinxcontrib.mermaid
+    - sphinxcontrib.bibtex
+    - sphinx_jupyterbook_latex
+
+  config:
+    # Theme configuration
+    html_theme: sphinx_book_theme
+    html_theme_options:
+      repository_url: https://github.com/your-org/modern-data-stack-showcase
+      repository_branch: main
+      path_to_docs: notebooks/documentation
+      use_repository_button: true
+      use_issues_button: true
+      use_download_button: true
+      use_fullscreen_button: true
+      use_sidenotes: true
+      show_navbar_depth: 2
+      show_toc_level: 2
+      navbar_align: left
+      navigation_with_keys: true
+      logo_only: false
+      collapse_navigation: false
+      sticky_navigation: true
+      includehidden: true
+      titles_only: false
+      
+    # Extensions configuration
+    myst_heading_anchors: 3
+    myst_enable_extensions:
+      - dollarmath
+      - amsmath
+      - deflist
+      - html_admonition
+      - html_image
+      - colon_fence
+      - smartquotes
+      - replacements
+      - linkify
+      - strikethrough
+      - tasklist
+      - fieldlist
+      - attrs_inline
+      - attrs_block
+      
+    # Copy button configuration
+    copybutton_prompt_text: "$ "
+    copybutton_remove_prompts: true
+    copybutton_line_continuation_character: "\\"
+    
+    # Bibtex configuration
+    bibtex_bibfiles:
+      - references.bib
+      
+    # Mermaid configuration
+    mermaid_version: "10.6.1"
+    mermaid_init_js: |
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: 'neutral',
+        themeVariables: {
+          primaryColor: '#1f77b4',
+          primaryTextColor: '#000',
+          primaryBorderColor: '#ccc',
+          lineColor: '#333',
+          sectionBkColor: '#f7f7f7',
+          altSectionBkColor: '#fff',
+          gridColor: '#e1e1e1',
+          secondaryColor: '#006100',
+          tertiaryColor: '#fff'
+        }
+      });
+      
+    # Comments configuration
+    comments:
+      hypothesis: false
+      utterances:
+        repo: "your-org/modern-data-stack-showcase"
+        
+    # OpenGraph configuration
+    ogp_site_url: "https://your-org.github.io/modern-data-stack-showcase/"
+    ogp_site_name: "Modern Data Stack Showcase"
+    ogp_description: "Comprehensive documentation for Jupyter notebooks in the Modern Data Stack Showcase"
+    ogp_image: "assets/og-image.png"
+    ogp_custom_meta_tags:
+      - property: "og:locale"
+        content: "en_US"
+      - property: "article:author"
+        content: "Data Science Team"
+
+# Launch buttons configuration
+launch_buttons:
+  notebook_interface: "jupyterlab"
+  binderhub_url: "https://mybinder.org"
+  jupyterhub_url: "https://datahub.berkeley.edu"
+  colab_url: "https://colab.research.google.com"
+  
+# Format configuration
+format:
+  show_source: true
+  show_edit: true
+  show_download: true
+  
+# Bibliography configuration
+bibtex_bibfiles:
+  - references.bib
+  - data-science-refs.bib
+  - devops-refs.bib
+  
+# Only build the files in the _toc.yml
+only_build_toc_files: true
+
+# Custom CSS
+extra_css:
+  - custom.css
+  
+# Custom JavaScript
+extra_javascript:
+  - custom.js
+  
+# Advanced configuration
+advanced:
+  comments_config:
+    hypothesis: true
+  extra_navbar: |
+    <div>
+      <a href="https://github.com/your-org/modern-data-stack-showcase">
+        <img src="https://img.shields.io/github/stars/your-org/modern-data-stack-showcase?style=social" alt="GitHub stars">
+      </a>
+    </div> 

@@ -1,0 +1,199 @@
+table 'Dim Calendar'
+	annotation PBI_Id = 1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d
+
+	annotation '$grocery_connector' = 'Dim Calendar'
+	annotation '$retail_connector' = 'Dim Calendar'
+	annotation '$harmonized' = 'Dim Calendar'
+
+	column date_key
+		dataType: int64
+		isHidden
+		displayFolder: Keys
+		sourceColumn: date_key
+
+	column Date
+		dataType: dateTime
+		sourceColumn: date
+		formatString: Short Date
+
+	column Year
+		dataType: int64
+		sourceColumn: year
+
+	column 'Year Month'
+		dataType: string
+		sourceColumn: year_month
+
+	column 'Year Quarter'
+		dataType: string
+		sourceColumn: year_quarter
+
+	column 'Year Week'
+		dataType: string
+		sourceColumn: year_week
+
+	column 'Month Name'
+		dataType: string
+		sourceColumn: month_name
+
+	column 'Month Number'
+		dataType: int64
+		sourceColumn: month_number
+
+	column 'Month Start'
+		dataType: dateTime
+		sourceColumn: month_start
+		formatString: Short Date
+
+	column 'Month End'
+		dataType: dateTime
+		sourceColumn: month_end
+		formatString: Short Date
+
+	column 'Week Start'
+		dataType: dateTime
+		sourceColumn: week_start
+		formatString: Short Date
+
+	column 'Week End'
+		dataType: dateTime
+		sourceColumn: week_end
+		formatString: Short Date
+
+	column 'Week Number'
+		dataType: int64
+		sourceColumn: week_number
+
+	column 'Day of Week'
+		dataType: string
+		sourceColumn: day_of_week
+
+	column 'Day of Week Number'
+		dataType: int64
+		sourceColumn: day_of_week_number
+
+	column 'Day of Month'
+		dataType: int64
+		sourceColumn: day_of_month
+
+	column 'Day of Year'
+		dataType: int64
+		sourceColumn: day_of_year
+
+	column 'Quarter Number'
+		dataType: int64
+		sourceColumn: quarter_number
+
+	column 'Quarter Name'
+		dataType: string
+		sourceColumn: quarter_name
+
+	column 'Is Weekend'
+		dataType: boolean
+		sourceColumn: is_weekend
+
+	column 'Is Holiday'
+		dataType: boolean
+		sourceColumn: is_holiday
+
+	column 'Fiscal Year'
+		dataType: int64
+		sourceColumn: fiscal_year
+
+	column 'Fiscal Quarter'
+		dataType: int64
+		sourceColumn: fiscal_quarter
+
+	column 'Fiscal Month'
+		dataType: int64
+		sourceColumn: fiscal_month
+
+	partition 'Dim Calendar' = m
+		mode: import
+		source = ```
+			let
+				// Configuration
+				StartDate = #date(2020, 1, 1),
+				EndDate = #date(2030, 12, 31),
+				FiscalYearStartMonth = 1, // January = 1, February = 2, etc.
+				
+				// Generate date list
+				DateList = List.Dates(StartDate, Number.From(EndDate - StartDate) + 1, #duration(1, 0, 0, 0)),
+				
+				// Convert to table
+				DateTable = Table.FromList(DateList, Splitter.SplitByNothing(), {"Date"}, null, ExtraValues.Error),
+				
+				// Add date key (YYYYMMDD format)
+				AddDateKey = Table.AddColumn(DateTable, "date_key", each Number.From(Text.From(Date.Year([Date])) & Text.PadStart(Text.From(Date.Month([Date])), 2, "0") & Text.PadStart(Text.From(Date.Day([Date])), 2, "0")), Int64.Type),
+				
+				// Add year
+				AddYear = Table.AddColumn(AddDateKey, "year", each Date.Year([Date]), Int64.Type),
+				
+				// Add month attributes
+				AddMonthNumber = Table.AddColumn(AddYear, "month_number", each Date.Month([Date]), Int64.Type),
+				AddMonthName = Table.AddColumn(AddMonthNumber, "month_name", each Date.MonthName([Date]), type text),
+				AddMonthStart = Table.AddColumn(AddMonthName, "month_start", each Date.StartOfMonth([Date]), type date),
+				AddMonthEnd = Table.AddColumn(AddMonthStart, "month_end", each Date.EndOfMonth([Date]), type date),
+				
+				// Add week attributes (Monday start)
+				AddWeekStart = Table.AddColumn(AddMonthEnd, "week_start", each Date.StartOfWeek([Date], Day.Monday), type date),
+				AddWeekEnd = Table.AddColumn(AddWeekStart, "week_end", each Date.EndOfWeek([Date], Day.Monday), type date),
+				AddWeekNumber = Table.AddColumn(AddWeekEnd, "week_number", each Date.WeekOfYear([Date]), Int64.Type),
+				
+				// Add day attributes (Monday start)
+				AddDayOfWeek = Table.AddColumn(AddWeekNumber, "day_of_week", each Date.DayOfWeekName([Date]), type text),
+				AddDayOfWeekNumber = Table.AddColumn(AddDayOfWeek, "day_of_week_number", each Date.DayOfWeek([Date], Day.Monday) + 1, Int64.Type),
+				AddDayOfMonth = Table.AddColumn(AddDayOfWeekNumber, "day_of_month", each Date.Day([Date]), Int64.Type),
+				AddDayOfYear = Table.AddColumn(AddDayOfMonth, "day_of_year", each Date.DayOfYear([Date]), Int64.Type),
+				
+				// Add quarter attributes
+				AddQuarterNumber = Table.AddColumn(AddDayOfYear, "quarter_number", each Date.QuarterOfYear([Date]), Int64.Type),
+				AddQuarterName = Table.AddColumn(AddQuarterNumber, "quarter_name", each "Q" & Text.From(Date.QuarterOfYear([Date])), type text),
+				
+				// Add composite date strings
+				AddYearMonth = Table.AddColumn(AddQuarterName, "year_month", each Text.From(Date.Year([Date])) & "-" & Text.PadStart(Text.From(Date.Month([Date])), 2, "0"), type text),
+				AddYearQuarter = Table.AddColumn(AddYearMonth, "year_quarter", each Text.From(Date.Year([Date])) & " Q" & Text.From(Date.QuarterOfYear([Date])), type text),
+				AddYearWeek = Table.AddColumn(AddYearQuarter, "year_week", each Text.From(Date.Year([Date])) & "-W" & Text.PadStart(Text.From(Date.WeekOfYear([Date])), 2, "0"), type text),
+				
+				// Add weekend flag (Monday start - Saturday=6, Sunday=7)
+				AddIsWeekend = Table.AddColumn(AddYearWeek, "is_weekend", each Date.DayOfWeek([Date], Day.Monday) >= 5, type logical),
+				
+				// Add basic holiday flag (can be expanded)
+				AddIsHoliday = Table.AddColumn(AddIsWeekend, "is_holiday", each 
+					(Date.Month([Date]) = 1 and Date.Day([Date]) = 1) or // New Year's Day
+					(Date.Month([Date]) = 7 and Date.Day([Date]) = 4) or // Independence Day
+					(Date.Month([Date]) = 12 and Date.Day([Date]) = 25)   // Christmas
+				, type logical),
+				
+				// Add fiscal year attributes (assuming fiscal year starts in January)
+				AddFiscalYear = Table.AddColumn(AddIsHoliday, "fiscal_year", each 
+					if Date.Month([Date]) >= FiscalYearStartMonth then 
+						Date.Year([Date])
+					else 
+						Date.Year([Date]) - 1
+				, Int64.Type),
+				
+				AddFiscalQuarter = Table.AddColumn(AddFiscalYear, "fiscal_quarter", each 
+					let
+						FiscalMonth = if Date.Month([Date]) >= FiscalYearStartMonth then 
+							Date.Month([Date]) - FiscalYearStartMonth + 1
+						else
+							Date.Month([Date]) - FiscalYearStartMonth + 13
+					in
+						Number.RoundUp(FiscalMonth / 3)
+				, Int64.Type),
+				
+				AddFiscalMonth = Table.AddColumn(AddFiscalQuarter, "fiscal_month", each 
+					if Date.Month([Date]) >= FiscalYearStartMonth then 
+						Date.Month([Date]) - FiscalYearStartMonth + 1
+					else
+						Date.Month([Date]) - FiscalYearStartMonth + 13
+				, Int64.Type),
+				
+				// Rename the original Date column to lowercase
+				RenameDate = Table.RenameColumns(AddFiscalMonth, {{"Date", "date"}})
+			in
+				RenameDate
+		```
+
+	annotation PBI_ResultType = Table 

@@ -1,0 +1,136 @@
+table 'Fact Sales'
+	annotation PBI_Id = 75a4b5c6-d7e8-4f9a-b0c1-2d3e4f5a6b7c
+
+	annotation '$grocery_connector.BigQuery.TableId' = 'modern-data-stack-showcase.dbt_analytics.analytics_grocery_connector_fact_sales'
+	annotation '$retail_connector.BigQuery.TableId' = 'modern-data-stack-showcase.dbt_analytics.analytics_retail_connector_fact_sales'
+	annotation '$harmonized.BigQuery.TableId' = 'modern-data-stack-showcase.dbt_analytics.analytics_harmonized_fact_sales'
+
+	measure 'Sales Amount' = SUM('Fact Sales'[sales_amount])
+		displayFolder: Measures
+		formatString: $ #,##0.00;($ #,##0.00)
+
+	measure 'Sales Quantity' = SUM('Fact Sales'[sales_quantity])
+		displayFolder: Measures
+		formatString: #,##0;(#,##0)
+
+	measure 'Regular Sales Amount' = SUM('Fact Sales'[regular_sales_amount])
+		displayFolder: Measures
+		formatString: $ #,##0.00;($ #,##0.00)
+
+	measure 'Regular Sales Quantity' = SUM('Fact Sales'[regular_sales_quantity])
+		displayFolder: Measures
+		formatString: #,##0;(#,##0)
+
+	measure 'Promotional Sales Amount' = SUM('Fact Sales'[promotional_sales_amount])
+		displayFolder: Measures
+		formatString: $ #,##0.00;($ #,##0.00)
+
+	measure 'Promotional Sales Quantity' = SUM('Fact Sales'[promotional_sales_quantity])
+		displayFolder: Measures
+		formatString: #,##0;(#,##0)
+
+	measure 'Average Selling Price' = DIVIDE([Sales Amount], [Sales Quantity])
+		displayFolder: Measures
+		formatString: $ #,##0.00;($ #,##0.00)
+
+	measure 'Total Sales Amount (Grocery)' = [Regular Sales Amount] + [Promotional Sales Amount]
+		displayFolder: Measures
+		formatString: $ #,##0.00;($ #,##0.00)
+
+	measure 'Total Sales Quantity (Grocery)' = [Regular Sales Quantity] + [Promotional Sales Quantity]
+		displayFolder: Measures
+		formatString: #,##0;(#,##0)
+
+	measure 'Promotional Sales %' = DIVIDE([Promotional Sales Amount], [Total Sales Amount (Grocery)])
+		displayFolder: Measures
+		formatString: #,##0.00 %;(#,##0.00 %)
+
+	measure 'Transaction Count' = DISTINCTCOUNT('Fact Sales'[sales_id])
+		displayFolder: Measures
+		formatString: #,##0;(#,##0)
+
+	measure 'Product Count' = DISTINCTCOUNT('Fact Sales'[product_id])
+		displayFolder: Measures
+		formatString: #,##0;(#,##0)
+
+	measure 'Store Count' = DISTINCTCOUNT('Fact Sales'[store_id])
+		displayFolder: Measures
+		formatString: #,##0;(#,##0)
+
+	column sales_id
+		dataType: int64
+		formatString: 0
+		isHidden
+		displayFolder: Keys
+		sourceColumn: sales_id
+
+	column date_key
+		dataType: dateTime
+		formatString: 0
+		isHidden
+		displayFolder: Keys
+		sourceColumn: date_key
+
+	column store_id
+		dataType: int64
+		isHidden
+		displayFolder: Keys
+		sourceColumn: store_id
+		annotation '$grocery_connector.sourceColumn' = "location_id"
+
+	column product_id
+		dataType: string
+		isHidden
+		displayFolder: Keys
+		sourceColumn: product_id
+		annotation '$grocery_connector.sourceColumn' = "item_id"
+
+	column sales_amount
+		dataType: decimal
+		isHidden
+		summarizeBy: sum
+		displayFolder: Facts
+		sourceColumn: sales_amount
+
+	column sales_quantity
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		displayFolder: Facts
+		sourceColumn: sales_quantity
+
+	column regular_sales_amount
+		dataType: decimal
+		isHidden
+		summarizeBy: sum
+		displayFolder: Facts
+		sourceColumn: regular_sales_amount
+
+	column regular_sales_quantity
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		displayFolder: Facts
+		sourceColumn: regular_sales_quantity
+
+	column promotional_sales_amount
+		dataType: decimal
+		isHidden
+		summarizeBy: sum
+		displayFolder: Facts
+		sourceColumn: promotional_sales_amount
+
+	column promotional_sales_quantity
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		displayFolder: Facts
+		sourceColumn: promotional_sales_quantity
+
+	column retailer_id
+		dataType: string
+		isHidden
+		displayFolder: Keys
+		sourceColumn: retailer_id
+
+	annotation PBI_ResultType = Table 

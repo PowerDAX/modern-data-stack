@@ -1,0 +1,247 @@
+# JupyterHub Multi-User Environment with Specialized Images
+# Supports ML and DevOps workflows with proper networking and persistence
+
+version: '3.8'
+
+services:
+  # JupyterHub - Multi-user notebook server
+  jupyterhub:
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyterhub
+    container_name: modern-stack-jupyterhub
+    ports:
+      - "8000:8000"
+    volumes:
+      - jupyterhub_data:/srv/jupyterhub
+      - jupyter_shared:/srv/jupyterhub/shared
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py
+    environment:
+      - DOCKER_NETWORK_NAME=modern-stack-jupyter_default
+      - DOCKER_SPAWN_CMD=start-singleuser.sh
+      - JUPYTERHUB_CRYPT_KEY=${JUPYTERHUB_CRYPT_KEY}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=jupyterhub
+      - POSTGRES_USER=jupyterhub
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      - postgres
+    networks:
+      - jupyter-network
+    restart: unless-stopped
+
+  # ML-focused Jupyter Environment
+  jupyter-ml:
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyter-ml
+    container_name: modern-stack-jupyter-ml
+    ports:
+      - "8888:8888"
+    volumes:
+      - jupyter_ml_data:/home/jovyan/work
+      - jupyter_shared:/home/jovyan/shared
+      - ../../../notebooks:/home/jovyan/notebooks
+      - ../../../dbt-analytics:/home/jovyan/dbt-analytics
+      - ../../../sample-data:/home/jovyan/sample-data
+    environment:
+      - JUPYTER_ENV=development
+      - JUPYTER_ENABLE_LAB=yes
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=mlflow
+      - POSTGRES_USER=mlflow
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      - postgres
+      - mlflow
+    networks:
+      - jupyter-network
+    restart: unless-stopped
+
+  # DevOps-focused Jupyter Environment
+  jupyter-devops:
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyter-devops
+    container_name: modern-stack-jupyter-devops
+    ports:
+      - "8889:8888"
+    volumes:
+      - jupyter_devops_data:/home/jovyan/work
+      - jupyter_shared:/home/jovyan/shared
+      - ../../../notebooks:/home/jovyan/notebooks
+      - ../../../infrastructure:/home/jovyan/infrastructure
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.kube:/home/jovyan/.kube:ro
+      - ~/.aws:/home/jovyan/.aws:ro
+    environment:
+      - JUPYTER_ENV=development
+      - JUPYTER_ENABLE_LAB=yes
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - KUBECONFIG=/home/jovyan/.kube/config
+    networks:
+      - jupyter-network
+    restart: unless-stopped
+
+  # PostgreSQL Database for JupyterHub and MLflow
+  postgres:
+    image: postgres:15
+    container_name: modern-stack-postgres
+    environment:
+      - POSTGRES_DB=jupyterhub
+      - POSTGRES_USER=jupyterhub
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - jupyter-network
+    restart: unless-stopped
+
+  # MLflow Tracking Server
+  mlflow:
+    image: python:3.11-slim
+    container_name: modern-stack-mlflow
+    command: >
+      bash -c "
+        pip install mlflow psycopg2-binary &&
+        mlflow server --host 0.0.0.0 --port 5000 
+        --backend-store-uri postgresql://mlflow:${POSTGRES_PASSWORD}@postgres:5432/mlflow
+        --default-artifact-root file:///mlflow/artifacts
+      "
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow/artifacts
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=postgresql://mlflow:${POSTGRES_PASSWORD}@postgres:5432/mlflow
+    depends_on:
+      - postgres
+    networks:
+      - jupyter-network
+    restart: unless-stopped
+
+  # Jupyter Book Documentation Server
+  jupyter-book:
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyter-book
+    container_name: modern-stack-jupyter-book
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../../../notebooks/docs:/docs
+      - jupyter_book_build:/build
+    command: >
+      bash -c "
+        jupyter-book build /docs --path-output /build &&
+        python -m http.server 8080 --directory /build/_build/html
+      "
+    networks:
+      - jupyter-network
+    restart: unless-stopped
+
+  # Papermill Execution Service
+  papermill-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.papermill
+    container_name: modern-stack-papermill
+    volumes:
+      - ../../../notebooks:/notebooks
+      - jupyter_shared:/shared
+      - papermill_output:/output
+    environment:
+      - NOTEBOOK_INPUT_PATH=/notebooks
+      - NOTEBOOK_OUTPUT_PATH=/output
+    depends_on:
+      - postgres
+      - mlflow
+    networks:
+      - jupyter-network
+    restart: unless-stopped
+
+  # Monitoring and Metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: modern-stack-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    networks:
+      - jupyter-network
+    restart: unless-stopped
+
+  # Visualization and Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: modern-stack-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+    networks:
+      - jupyter-network
+    restart: unless-stopped
+
+  # Redis for Caching and Session Management
+  redis:
+    image: redis:7-alpine
+    container_name: modern-stack-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - jupyter-network
+    restart: unless-stopped
+
+# Volumes for data persistence
+volumes:
+  jupyterhub_data:
+    driver: local
+  jupyter_ml_data:
+    driver: local
+  jupyter_devops_data:
+    driver: local
+  jupyter_shared:
+    driver: local
+  postgres_data:
+    driver: local
+  mlflow_data:
+    driver: local
+  jupyter_book_build:
+    driver: local
+  papermill_output:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# Networks for service communication
+networks:
+  jupyter-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16 

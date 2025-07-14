@@ -1,0 +1,30 @@
+# Core dbt and database adapters
+dbt-core==1.8.7
+dbt-postgres==1.8.2
+dbt-bigquery==1.8.2
+
+# Data quality and testing
+great-expectations==0.18.16
+dbt-expectations==0.10.3
+
+# Development and debugging
+dbt-osmosis==0.11.15
+pre-commit==3.6.0
+
+# Documentation and utilities
+dbt-docs-to-notion==0.1.0
+sqlfluff==3.0.7
+sqlfluff-templater-dbt==3.0.7
+
+# Data generation and testing
+faker==20.1.0
+pandas==2.1.4
+numpy==1.26.2
+
+# Performance monitoring
+dbt-artifacts-parser==0.5.0
+
+# Additional utilities
+PyYAML==6.0.1
+requests==2.31.0
+python-dotenv==1.0.0 

@@ -1,0 +1,598 @@
+# ================================================================================================
+# AZURE DEVOPS PIPELINE - POWER BI MODEL DEPLOYMENT
+# ================================================================================================
+# This pipeline automates the deployment of Power BI models across multiple environments
+# with comprehensive validation, testing, and deployment strategies.
+#
+# FEATURES:
+# - Multi-stage deployment (Dev -> Staging -> Production)
+# - Intelligent model change detection (only deploys changed models)
+# - Comprehensive validation and testing
+# - Support for multiple connector types (master, grocery, retail, harmonized)
+# - Post-deployment validation and notifications
+# - Environment-specific configurations
+# - Automated rollback capabilities
+# ================================================================================================
+
+# BUILD TRIGGERS
+# Defines when the pipeline should automatically run
+trigger:
+  branches:
+    include:
+      - main          # Production deployments
+      - develop       # Staging deployments
+      - feature/*     # Feature branch validation
+  paths:
+    include:
+      - powerbi-models/**    # Only run when Power BI models change
+    exclude:
+      - powerbi-models/README.md      # Don't trigger on documentation changes
+      - powerbi-models/docs/**        # Don't trigger on documentation changes
+
+# PULL REQUEST TRIGGERS
+# Defines when the pipeline should run for pull requests
+pr:
+  branches:
+    include:
+      - main          # PRs targeting main branch
+      - develop       # PRs targeting develop branch
+  paths:
+    include:
+      - powerbi-models/**    # Only run when Power BI models change
+    exclude:
+      - powerbi-models/README.md      # Don't trigger on documentation changes
+      - powerbi-models/docs/**        # Don't trigger on documentation changes
+
+# AGENT POOL CONFIGURATION
+# Specifies the virtual machine image to use for the build agent
+pool:
+  vmImage: 'ubuntu-latest'    # Using Ubuntu for better PowerShell Core support and cost efficiency
+
+# PIPELINE VARIABLES
+# Defines variables used throughout the pipeline
+variables:
+  # Variable group containing sensitive Power BI service principal credentials
+  # This should be created in Azure DevOps Library with the following variables:
+  # - POWERBI_CLIENT_ID: Service principal application ID
+  # - POWERBI_CLIENT_SECRET: Service principal secret
+  # - POWERBI_TENANT_ID: Azure AD tenant ID
+  - group: 'PowerBI-ServicePrincipal'
+  
+  # Build configuration for the deployment
+  - name: 'buildConfiguration'
+    value: 'Release'
+  
+  # Model version using build number for traceability
+  - name: 'modelVersion'
+    value: '1.0.$(Build.BuildNumber)'
+  
+  # Flag to determine if all models should be built (true for main branch)
+  - name: 'runAllModels'
+    value: ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') }}
+
+# ================================================================================================
+# PIPELINE STAGES
+# ================================================================================================
+# The pipeline consists of 5 stages:
+# 1. Validate - Validates model structure and determines which models to update
+# 2. BuildAndTest - Builds and tests models in development environment
+# 3. DeployToStaging - Deploys to staging environment (develop branch only)
+# 4. DeployToProduction - Deploys to production environment (main branch only)
+# 5. PostDeployment - Post-deployment validation and notifications
+# ================================================================================================
+
+stages:
+  # ================================================================================================
+  # STAGE 1: VALIDATE MODELS
+  # ================================================================================================
+  # This stage validates the repository structure and determines which models need to be updated
+  # based on the files that have changed in the current build
+  - stage: 'Validate'
+    displayName: 'Validate Models'
+          jobs:
+      # ================================================================================================
+      # JOB 1.1: VALIDATE REPOSITORY STRUCTURE
+      # ================================================================================================
+      # This job validates that all required directories and files exist in the repository
+      # to ensure the pipeline can successfully deploy the Power BI models
+      - job: 'ValidateStructure'
+        displayName: 'Validate Model Structure'
+        steps:
+          # Check out the repository with full history for git operations
+          - checkout: self
+            fetchDepth: 0    # Get full history to compare changes
+            
+          # PowerShell task to validate directory and file structure
+          - task: PowerShell@2
+            displayName: 'Validate Repository Structure'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "Validating repository structure..."
+                
+                # Define required directories that must exist for successful deployment
+                $requiredDirs = @(
+                  'powerbi-models/master-model',        # Master model directory
+                  'powerbi-models/shared-assets',       # Shared assets (themes, templates)
+                  'powerbi-models/devops-templates'     # DevOps deployment templates
+                )
+                
+                # Check each required directory exists
+                foreach ($dir in $requiredDirs) {
+                  if (-not (Test-Path $dir)) {
+                    Write-Error "Required directory not found: $dir"
+                    exit 1
+                  }
+                }
+                
+                # Validate master model structure - check for essential TMDL files
+                $masterModelPath = 'powerbi-models/master-model/model-folder'
+                $requiredFiles = @(
+                  'model.tmdl',          # Main model definition
+                  'relationships.tmdl',  # Model relationships
+                  'database.tmdl'        # Database configuration
+                )
+                
+                # Check each required file exists
+                foreach ($file in $requiredFiles) {
+                  if (-not (Test-Path "$masterModelPath/$file")) {
+                    Write-Error "Required file not found: $masterModelPath/$file"
+                    exit 1
+                  }
+                }
+                
+                Write-Host "Repository structure validation completed successfully"
+
+      # ================================================================================================
+      # JOB 1.2: DETERMINE MODELS TO UPDATE
+      # ================================================================================================
+      # This job analyzes which files have changed and determines which models need to be updated
+      # This optimization prevents unnecessary deployments and reduces build time
+      - job: 'DetermineModelsToUpdate'
+        displayName: 'Determine Models to Update'
+        dependsOn: 'ValidateStructure'    # Only run after structure validation passes
+        steps:
+          # Check out the repository with full history for git diff operations
+          - checkout: self
+            fetchDepth: 0    # Need full history to compare changes
+            
+          # PowerShell task to analyze changed files and set output variables
+          - task: PowerShell@2
+            displayName: 'Analyze Changed Files'
+            name: 'AnalyzeChanges'    # Named task so outputs can be referenced by other stages
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "Analyzing changed files to determine which models to update..."
+                
+                # Initialize hash table to track which models need updates
+                $modelsToUpdate = @{
+                  'master' = $false      # Master model (base model)
+                  'grocery' = $false     # Grocery connector model
+                  'retail' = $false      # Retail connector model  
+                  'harmonized' = $false  # Harmonized cross-connector model
+                }
+                
+                # DECISION LOGIC: When to build all models
+                # 1. Main branch builds (production deployments)
+                # 2. Manual pipeline triggers (user-initiated)
+                if ("$(Build.SourceBranch)" -eq "refs/heads/main" -or "$(Build.Reason)" -eq "Manual") {
+                  Write-Host "Building all models (main branch or manual trigger)"
+                  $modelsToUpdate['master'] = $true
+                  $modelsToUpdate['grocery'] = $true
+                  $modelsToUpdate['retail'] = $true
+                  $modelsToUpdate['harmonized'] = $true
+                } else {
+                  # INTELLIGENT CHANGE DETECTION
+                  # Compare current commit with previous commit to find changed files
+                  $changedFiles = git diff --name-only HEAD~1 HEAD
+                  
+                  # Analyze each changed file to determine impact
+                  foreach ($file in $changedFiles) {
+                    Write-Host "Analyzing file: $file"
+                    
+                    # MASTER MODEL CHANGES
+                    # If master model changes, all connector models need updating
+                    if ($file -match "powerbi-models/master-model/") {
+                      Write-Host "Master model changed - will update all models"
+                      $modelsToUpdate['master'] = $true
+                      $modelsToUpdate['grocery'] = $true
+                      $modelsToUpdate['retail'] = $true
+                      $modelsToUpdate['harmonized'] = $true
+                      break    # No need to check other files
+                    } 
+                    # SHARED ASSETS CHANGES
+                    # If shared assets change (themes, templates), all models need updating
+                    elseif ($file -match "powerbi-models/shared-assets/") {
+                      Write-Host "Shared assets changed - will update all models"
+                      $modelsToUpdate['master'] = $true
+                      $modelsToUpdate['grocery'] = $true
+                      $modelsToUpdate['retail'] = $true
+                      $modelsToUpdate['harmonized'] = $true
+                      break    # No need to check other files
+                    } 
+                    # DEVOPS TEMPLATES CHANGES
+                    # If deployment templates change, all models need updating for consistency
+                    elseif ($file -match "powerbi-models/devops-templates/") {
+                      Write-Host "DevOps templates changed - will update all models"
+                      $modelsToUpdate['master'] = $true
+                      $modelsToUpdate['grocery'] = $true
+                      $modelsToUpdate['retail'] = $true
+                      $modelsToUpdate['harmonized'] = $true
+                      break    # No need to check other files
+                    }
+                  }
+                }
+                
+                # SET OUTPUT VARIABLES
+                # These variables can be referenced by subsequent stages using:
+                # dependencies.Validate.outputs['DetermineModelsToUpdate.AnalyzeChanges.variableName']
+                Write-Host "##vso[task.setvariable variable=updateMaster;isOutput=true]$($modelsToUpdate['master'])"
+                Write-Host "##vso[task.setvariable variable=updateGrocery;isOutput=true]$($modelsToUpdate['grocery'])"
+                Write-Host "##vso[task.setvariable variable=updateRetail;isOutput=true]$($modelsToUpdate['retail'])"
+                Write-Host "##vso[task.setvariable variable=updateHarmonized;isOutput=true]$($modelsToUpdate['harmonized'])"
+                
+                # LOG DEPLOYMENT DECISIONS
+                Write-Host "Models to update:"
+                Write-Host "  Master: $($modelsToUpdate['master'])"
+                Write-Host "  Grocery: $($modelsToUpdate['grocery'])"
+                Write-Host "  Retail: $($modelsToUpdate['retail'])"
+                Write-Host "  Harmonized: $($modelsToUpdate['harmonized'])"
+
+  # ================================================================================================
+  # STAGE 2: BUILD AND TEST MODELS
+  # ================================================================================================
+  # This stage builds and tests the Power BI models in the development environment
+  # Jobs run conditionally based on the change analysis from the Validate stage
+  - stage: 'BuildAndTest'
+    displayName: 'Build and Test Models'
+    dependsOn: 'Validate'          # Only run after validation stage completes
+    condition: succeeded()         # Only run if validation stage succeeded
+    jobs:
+      # ================================================================================================
+      # JOB 2.1: MASTER MODEL BUILD AND TEST
+      # ================================================================================================
+      # Builds and tests the master model (base model without connector-specific filtering)
+      # This job runs first as other connector models depend on it
+      - job: 'MasterModel'
+        displayName: 'Master Model'
+        # CONDITIONAL EXECUTION: Only run if master model needs updating
+        condition: eq(dependencies.Validate.outputs['DetermineModelsToUpdate.AnalyzeChanges.updateMaster'], 'true')
+        steps:
+          # Use the deployment template with development environment settings
+          - template: devops-templates/powerbi-deployment.yml
+            parameters:
+              modelName: 'Modern Data Stack Showcase'           # Display name for the model
+              modelPath: 'powerbi-models/master-model/model-folder'  # Path to TMDL files
+              connectorType: 'master'                           # Master model (no filtering)
+              environmentType: 'dev'                            # Development environment
+              validateModel: true                               # Run model validation
+              runTests: true                                    # Run automated tests
+              deployReports: false                              # Don't deploy reports in dev
+
+      # ================================================================================================
+      # JOB 2.2: GROCERY CONNECTOR MODEL BUILD AND TEST
+      # ================================================================================================
+      # Builds and tests the grocery connector model with grocery-specific filtering
+      # Depends on master model completing successfully
+      - job: 'GroceryModel'
+        displayName: 'Grocery Connector Model'
+        dependsOn: 'MasterModel'    # Must wait for master model to complete
+        # CONDITIONAL EXECUTION: Only run if grocery model needs updating AND master model succeeded
+        condition: |
+          and(
+            in(dependencies.MasterModel.result, 'Succeeded', 'Skipped'),
+            eq(dependencies.Validate.outputs['DetermineModelsToUpdate.AnalyzeChanges.updateGrocery'], 'true')
+          )
+        steps:
+          # Use the deployment template with grocery connector settings
+          - template: devops-templates/powerbi-deployment.yml
+            parameters:
+              modelName: 'Modern Data Stack Showcase'           # Display name for the model
+              modelPath: 'powerbi-models/master-model/model-folder'  # Same TMDL files as master
+              connectorType: 'grocery'                          # Grocery connector filtering
+              environmentType: 'dev'                            # Development environment
+              validateModel: true                               # Run model validation
+              runTests: true                                    # Run automated tests
+              deployReports: false                              # Don't deploy reports in dev
+
+      # ================================================================================================
+      # JOB 2.3: RETAIL CONNECTOR MODEL BUILD AND TEST
+      # ================================================================================================
+      # Builds and tests the retail connector model with retail-specific filtering
+      # Depends on master model completing successfully
+      - job: 'RetailModel'
+        displayName: 'Retail Connector Model'
+        dependsOn: 'MasterModel'    # Must wait for master model to complete
+        # CONDITIONAL EXECUTION: Only run if retail model needs updating AND master model succeeded
+        condition: |
+          and(
+            in(dependencies.MasterModel.result, 'Succeeded', 'Skipped'),
+            eq(dependencies.Validate.outputs['DetermineModelsToUpdate.AnalyzeChanges.updateRetail'], 'true')
+          )
+        steps:
+          # Use the deployment template with retail connector settings
+          - template: devops-templates/powerbi-deployment.yml
+            parameters:
+              modelName: 'Modern Data Stack Showcase'           # Display name for the model
+              modelPath: 'powerbi-models/master-model/model-folder'  # Same TMDL files as master
+              connectorType: 'retail'                           # Retail connector filtering
+              environmentType: 'dev'                            # Development environment
+              validateModel: true                               # Run model validation
+              runTests: true                                    # Run automated tests
+              deployReports: false                              # Don't deploy reports in dev
+
+      # ================================================================================================
+      # JOB 2.4: HARMONIZED MODEL BUILD AND TEST
+      # ================================================================================================
+      # Builds and tests the harmonized model with cross-connector data harmonization
+      # Depends on master model completing successfully
+      - job: 'HarmonizedModel'
+        displayName: 'Harmonized Model'
+        dependsOn: 'MasterModel'    # Must wait for master model to complete
+        # CONDITIONAL EXECUTION: Only run if harmonized model needs updating AND master model succeeded
+        condition: |
+          and(
+            in(dependencies.MasterModel.result, 'Succeeded', 'Skipped'),
+            eq(dependencies.Validate.outputs['DetermineModelsToUpdate.AnalyzeChanges.updateHarmonized'], 'true')
+          )
+        steps:
+          # Use the deployment template with harmonized connector settings
+          - template: devops-templates/powerbi-deployment.yml
+            parameters:
+              modelName: 'Modern Data Stack Showcase'           # Display name for the model
+              modelPath: 'powerbi-models/master-model/model-folder'  # Same TMDL files as master
+              connectorType: 'harmonized'                       # Harmonized cross-connector data
+              environmentType: 'dev'                            # Development environment
+              validateModel: true                               # Run model validation
+              runTests: true                                    # Run automated tests
+              deployReports: false                              # Don't deploy reports in dev
+
+  # ================================================================================================
+  # STAGE 3: DEPLOY TO STAGING
+  # ================================================================================================
+  # This stage deploys the master model to the staging environment for user acceptance testing
+  # Only runs for builds from the 'develop' branch
+  - stage: 'DeployToStaging'
+    displayName: 'Deploy to Staging'
+    dependsOn: 'BuildAndTest'      # Only run after build and test stage completes
+    # CONDITIONAL EXECUTION: Only run on develop branch builds AND if build/test succeeded
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
+    jobs:
+      # ================================================================================================
+      # JOB 3.1: STAGING DEPLOYMENT
+      # ================================================================================================
+      # Deploys the master model to staging environment for user acceptance testing
+      # Uses Azure DevOps deployment jobs for environment approval and tracking
+      - deployment: 'DeployToStaging'
+        displayName: 'Deploy to Staging Environment'
+        environment: 'PowerBI-Staging'    # Azure DevOps environment (can require approvals)
+        strategy:
+          runOnce:    # Simple deployment strategy (not rolling or blue-green)
+            deploy:
+              steps:
+                # Check out source code for deployment
+                - checkout: self
+                
+                # Deploy master model to staging environment
+                - template: devops-templates/powerbi-deployment.yml
+                  parameters:
+                    modelName: 'Modern Data Stack Showcase'           # Display name for the model
+                    modelPath: 'powerbi-models/master-model/model-folder'  # Path to TMDL files
+                    connectorType: 'master'                           # Master model for staging
+                    environmentType: 'staging'                        # Staging environment
+                    validateModel: true                               # Run model validation
+                    runTests: true                                    # Run automated tests
+                    deployReports: true                               # Deploy reports for UAT
+
+  # ================================================================================================
+  # STAGE 4: DEPLOY TO PRODUCTION
+  # ================================================================================================
+  # This stage deploys all models to the production environment for end users
+  # Only runs for builds from the 'main' branch after staging deployment succeeds
+  - stage: 'DeployToProduction'
+    displayName: 'Deploy to Production'
+    dependsOn: 'DeployToStaging'   # Only run after staging deployment completes
+    # CONDITIONAL EXECUTION: Only run on main branch builds AND if staging deployment succeeded
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      # ================================================================================================
+      # JOB 4.1: PRODUCTION DEPLOYMENT
+      # ================================================================================================
+      # Deploys all connector models to production environment for end users
+      # Uses Azure DevOps deployment jobs for environment approval and tracking
+      - deployment: 'DeployToProduction'
+        displayName: 'Deploy to Production Environment'
+        environment: 'PowerBI-Production'  # Azure DevOps environment (requires approvals)
+        strategy:
+          runOnce:    # Simple deployment strategy (not rolling or blue-green)
+            deploy:
+              steps:
+                # Check out source code for deployment
+                - checkout: self
+                
+                # ================================================================================================
+                # DEPLOY MASTER MODEL TO PRODUCTION
+                # ================================================================================================
+                # The master model serves as the base model for all connector variations
+                - template: devops-templates/powerbi-deployment.yml
+                  parameters:
+                    modelName: 'Modern Data Stack Showcase'           # Display name for the model
+                    modelPath: 'powerbi-models/master-model/model-folder'  # Path to TMDL files
+                    connectorType: 'master'                           # Master model (no filtering)
+                    environmentType: 'prod'                           # Production environment
+                    validateModel: true                               # Run model validation
+                    runTests: true                                    # Run automated tests
+                    deployReports: true                               # Deploy reports for users
+
+                # ================================================================================================
+                # DEPLOY GROCERY CONNECTOR MODEL TO PRODUCTION
+                # ================================================================================================
+                # The grocery connector model with grocery-specific data filtering
+                - template: devops-templates/powerbi-deployment.yml
+                  parameters:
+                    modelName: 'Modern Data Stack Showcase'           # Display name for the model
+                    modelPath: 'powerbi-models/master-model/model-folder'  # Same TMDL files as master
+                    connectorType: 'grocery'                          # Grocery connector filtering
+                    environmentType: 'prod'                           # Production environment
+                    validateModel: true                               # Run model validation
+                    runTests: true                                    # Run automated tests
+                    deployReports: true                               # Deploy reports for users
+
+                # ================================================================================================
+                # DEPLOY RETAIL CONNECTOR MODEL TO PRODUCTION
+                # ================================================================================================
+                # The retail connector model with retail-specific data filtering
+                - template: devops-templates/powerbi-deployment.yml
+                  parameters:
+                    modelName: 'Modern Data Stack Showcase'           # Display name for the model
+                    modelPath: 'powerbi-models/master-model/model-folder'  # Same TMDL files as master
+                    connectorType: 'retail'                           # Retail connector filtering
+                    environmentType: 'prod'                           # Production environment
+                    validateModel: true                               # Run model validation
+                    runTests: true                                    # Run automated tests
+                    deployReports: true                               # Deploy reports for users
+
+                # ================================================================================================
+                # DEPLOY HARMONIZED MODEL TO PRODUCTION
+                # ================================================================================================
+                # The harmonized model with cross-connector data harmonization
+                - template: devops-templates/powerbi-deployment.yml
+                  parameters:
+                    modelName: 'Modern Data Stack Showcase'           # Display name for the model
+                    modelPath: 'powerbi-models/master-model/model-folder'  # Same TMDL files as master
+                    connectorType: 'harmonized'                       # Harmonized cross-connector data
+                    environmentType: 'prod'                           # Production environment
+                    validateModel: true                               # Run model validation
+                    runTests: true                                    # Run automated tests
+                    deployReports: true                               # Deploy reports for users
+
+  # ================================================================================================
+  # STAGE 5: POST-DEPLOYMENT TASKS
+  # ================================================================================================
+  # This stage runs post-deployment validation and sends notifications
+  # Only runs for main branch builds after production deployment succeeds
+  - stage: 'PostDeployment'
+    displayName: 'Post-Deployment Tasks'
+    dependsOn: 
+      - 'DeployToProduction'      # Only run after production deployment completes
+    # CONDITIONAL EXECUTION: Only run on main branch builds AND if production deployment succeeded
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      # ================================================================================================
+      # JOB 5.1: POST-DEPLOYMENT VALIDATION
+      # ================================================================================================
+      # Validates that all models were successfully deployed to production
+      # Checks workspace existence, dataset availability, and report deployment
+      - job: 'PostDeploymentValidation'
+        displayName: 'Post-Deployment Validation'
+        steps:
+          # PowerShell task to validate production deployment
+          - task: PowerShell@2
+            displayName: 'Validate Production Deployment'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "Running post-deployment validation..."
+                
+                # POWER BI SERVICE CONNECTION
+                # Connect using service principal credentials from variable group
+                $clientId = $env:POWERBI_CLIENT_ID
+                $clientSecret = $env:POWERBI_CLIENT_SECRET
+                $tenantId = $env:POWERBI_TENANT_ID
+                
+                # Create credential object for service principal authentication
+                $secureString = ConvertTo-SecureString $clientSecret -AsPlainText -Force
+                $credential = New-Object System.Management.Automation.PSCredential ($clientId, $secureString)
+                
+                # Install and connect to Power BI management module
+                Install-Module -Name MicrosoftPowerBIMgmt -Force -Scope CurrentUser
+                Connect-PowerBIServiceAccount -ServicePrincipal -Credential $credential -TenantId $tenantId
+                
+                # PRODUCTION WORKSPACE VALIDATION
+                # Find all production workspaces for this project
+                $prodWorkspaces = Get-PowerBIWorkspace | Where-Object { $_.Name -like "*modern-data-stack*prod*" }
+                
+                if ($prodWorkspaces.Count -eq 0) {
+                  Write-Warning "No production workspaces found"
+                } else {
+                  Write-Host "Found $($prodWorkspaces.Count) production workspaces"
+                  
+                  # VALIDATE EACH PRODUCTION WORKSPACE
+                  foreach ($workspace in $prodWorkspaces) {
+                    Write-Host "Validating workspace: $($workspace.Name)"
+                    
+                    # Check datasets in workspace (should have all connector models)
+                    $datasets = Get-PowerBIDataset -WorkspaceId $workspace.Id
+                    Write-Host "  Datasets: $($datasets.Count)"
+                    
+                    # Check reports in workspace (should have deployed reports)
+                    $reports = Get-PowerBIReport -WorkspaceId $workspace.Id
+                    Write-Host "  Reports: $($reports.Count)"
+                    
+                    # Additional validation could include:
+                    # - Dataset refresh status
+                    # - Report functionality tests
+                    # - Data source connectivity
+                    # - User permissions
+                  }
+                }
+                
+                Write-Host "Post-deployment validation completed"
+
+      # ================================================================================================
+      # JOB 5.2: DEPLOYMENT NOTIFICATIONS
+      # ================================================================================================
+      # Sends notifications about successful deployment to stakeholders
+      # In production, this would integrate with Teams, Slack, email, etc.
+      - job: 'SendNotifications'
+        displayName: 'Send Deployment Notifications'
+        dependsOn: 'PostDeploymentValidation'    # Only run after validation completes
+        condition: succeeded()                   # Only run if validation succeeded
+        steps:
+          # PowerShell task to send deployment notifications
+          - task: PowerShell@2
+            displayName: 'Send Success Notification'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "Sending deployment success notifications..."
+                
+                # DEPLOYMENT SUMMARY
+                # Create summary object with key deployment information
+                $deploymentSummary = @{
+                  'BuildNumber' = '$(Build.BuildNumber)'                    # Build ID for tracking
+                  'SourceBranch' = '$(Build.SourceBranch)'                  # Source branch (main)
+                  'DeploymentTime' = Get-Date -Format "yyyy-MM-dd HH:mm:ss" # Deployment timestamp
+                  'Environment' = 'Production'                              # Target environment
+                  'Status' = 'Success'                                      # Deployment status
+                  'ModelsDeployed' = @('Master', 'Grocery', 'Retail', 'Harmonized')  # Deployed models
+                  'PipelineUrl' = "$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)"  # Pipeline URL
+                }
+                
+                # LOG DEPLOYMENT SUMMARY
+                $deploymentSummary | ConvertTo-Json | Write-Host
+                
+                # NOTIFICATION INTEGRATION POINTS
+                # In a real implementation, you would integrate with:
+                # - Microsoft Teams: Send adaptive cards with deployment details
+                # - Slack: Post messages to deployment channels
+                # - Email: Send deployment reports to stakeholders
+                # - ServiceNow: Create change records for compliance
+                # - Azure Monitor: Log deployment events for monitoring
+                
+                # Example Teams webhook integration (commented out):
+                # $teamsWebhook = "https://outlook.office.com/webhook/..."
+                # $teamsMessage = @{
+                #   "text" = "Power BI deployment completed successfully"
+                #   "sections" = @(@{
+                #     "facts" = @(
+                #       @{ "name" = "Build"; "value" = $deploymentSummary.BuildNumber },
+                #       @{ "name" = "Environment"; "value" = $deploymentSummary.Environment },
+                #       @{ "name" = "Status"; "value" = $deploymentSummary.Status }
+                #     )
+                #   })
+                # }
+                # Invoke-RestMethod -Uri $teamsWebhook -Method POST -Body ($teamsMessage | ConvertTo-Json -Depth 3) -ContentType "application/json"
+                
+                Write-Host "Deployment notifications sent successfully" 

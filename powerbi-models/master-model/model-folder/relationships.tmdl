@@ -1,0 +1,49 @@
+relationship 'Fact Sales to Dim Product'
+	fromColumn: 'Fact Sales'[product_id]
+	fromCardinality: many
+	toColumn: 'Dim Product'[product_id]
+	toCardinality: one
+
+relationship 'Fact Sales to Dim Store'
+	fromColumn: 'Fact Sales'[store_id]
+	fromCardinality: many
+	toColumn: 'Dim Store'[store_id]
+	toCardinality: one
+
+relationship 'Fact Inventory to Dim Product'
+	fromColumn: 'Fact Inventory'[product_id]
+	fromCardinality: many
+	toColumn: 'Dim Product'[product_id]
+	toCardinality: one
+
+relationship 'Fact Inventory to Dim Store'
+	fromColumn: 'Fact Inventory'[store_id]
+	fromCardinality: many
+	toColumn: 'Dim Store'[store_id]
+	toCardinality: one
+
+relationship 'Fact Sales to Dim Calendar'
+	fromColumn: 'Fact Sales'[date_key]
+	fromCardinality: many
+	toColumn: 'Dim Calendar'[date_key]
+	toCardinality: one
+
+relationship 'Fact Inventory to Dim Calendar'
+	fromColumn: 'Fact Inventory'[date_key]
+	fromCardinality: many
+	toColumn: 'Dim Calendar'[date_key]
+	toCardinality: one
+
+relationship 'Dim Calendar to Dim Time Period'
+	fromColumn: 'Dim Calendar'[Date]
+	fromCardinality: many
+	toColumn: 'Dim Time Period'[Start Date]
+	toCardinality: one
+	isActive: false
+
+relationship 'Dim Calendar to Dim Time Period (End Date)'
+	fromColumn: 'Dim Calendar'[Date]
+	fromCardinality: many
+	toColumn: 'Dim Time Period'[End Date]
+	toCardinality: one
+	isActive: false 

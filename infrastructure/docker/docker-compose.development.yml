@@ -1,0 +1,348 @@
+# Docker Compose Development Override
+# Optimized for development with easier access and debugging capabilities
+
+version: '3.8'
+
+services:
+  # PostgreSQL for development
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=developer
+      - POSTGRES_PASSWORD=development
+      - POSTGRES_DB=modern_data_stack_dev
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./postgres/init-dev.sql:/docker-entrypoint-initdb.d/init-dev.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U developer"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dev-network
+
+  # MLflow for development
+  mlflow:
+    build:
+      context: ./mlflow
+      dockerfile: Dockerfile
+      args:
+        - ENVIRONMENT=development
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=postgresql://developer:development@postgres:5432/mlflow
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
+      - MLFLOW_TRACKING_USERNAME=dev
+      - MLFLOW_TRACKING_PASSWORD=dev
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_dev_data:/mlflow/artifacts
+      - ./mlflow/dev-config:/opt/mlflow/config
+    depends_on:
+      - postgres
+    networks:
+      - dev-network
+
+  # Great Expectations for development
+  great-expectations:
+    build:
+      context: ./great-expectations
+      dockerfile: Dockerfile
+      args:
+        - ENVIRONMENT=development
+    environment:
+      - POSTGRES_CONNECTION_STRING=postgresql://developer:development@postgres:5432/great_expectations
+      - GE_CONFIG_DIR=/opt/great_expectations/config
+      - DATA_CONTEXT_ID=development-context
+    ports:
+      - "8082:8082"
+    volumes:
+      - ge_dev_data:/opt/great_expectations/data
+      - ge_dev_expectations:/opt/great_expectations/expectations
+      - ge_dev_validations:/opt/great_expectations/validations
+      - ./great-expectations/dev-config:/opt/great_expectations/config
+    depends_on:
+      - postgres
+    networks:
+      - dev-network
+
+  # Jupyter Lab for development
+  jupyter-lab:
+    build:
+      context: ./jupyter
+      dockerfile: Dockerfile.jupyter-ml
+      args:
+        - ENVIRONMENT=development
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=
+      - JUPYTER_PASSWORD=
+      - JUPYTER_ENV=development
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - POSTGRES_HOST=postgres
+    ports:
+      - "8888:8888"
+    volumes:
+      - jupyter_dev_data:/home/jovyan/work
+      - ../../notebooks:/home/jovyan/notebooks
+      - ../../dbt-analytics:/home/jovyan/dbt-analytics
+      - ../../sample-data:/home/jovyan/sample-data
+      - ./jupyter/dev-config:/home/jovyan/.jupyter
+    depends_on:
+      - postgres
+      - mlflow
+    networks:
+      - dev-network
+
+  # Jupyter DevOps Environment
+  jupyter-devops:
+    build:
+      context: ./jupyter
+      dockerfile: Dockerfile.jupyter-devops
+      args:
+        - ENVIRONMENT=development
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=
+      - JUPYTER_PASSWORD=
+      - JUPYTER_ENV=development
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    ports:
+      - "8889:8888"
+    volumes:
+      - jupyter_devops_data:/home/jovyan/work
+      - ../../notebooks:/home/jovyan/notebooks
+      - ../../infrastructure:/home/jovyan/infrastructure
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.kube:/home/jovyan/.kube:ro
+      - ~/.aws:/home/jovyan/.aws:ro
+    networks:
+      - dev-network
+
+  # Airflow for development
+  airflow-webserver:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+      args:
+        - ENVIRONMENT=development
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql://developer:development@postgres:5432/airflow
+      - AIRFLOW__CORE__FERNET_KEY=development-key-not-secure
+      - AIRFLOW__WEBSERVER__SECRET_KEY=development-secret-key
+      - AIRFLOW__WEBSERVER__AUTHENTICATE=False
+      - AIRFLOW__WEBSERVER__RBAC=False
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
+      - AIRFLOW__CORE__LOAD_EXAMPLES=True
+    ports:
+      - "8080:8080"
+    volumes:
+      - airflow_dev_dags:/opt/airflow/dags
+      - airflow_dev_logs:/opt/airflow/logs
+      - airflow_dev_plugins:/opt/airflow/plugins
+      - ../airflow/dags:/opt/airflow/dags
+    depends_on:
+      - postgres
+    networks:
+      - dev-network
+
+  # Airflow scheduler for development
+  airflow-scheduler:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+      args:
+        - ENVIRONMENT=development
+    command: scheduler
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql://developer:development@postgres:5432/airflow
+      - AIRFLOW__CORE__FERNET_KEY=development-key-not-secure
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
+      - AIRFLOW__CORE__LOAD_EXAMPLES=True
+    volumes:
+      - airflow_dev_dags:/opt/airflow/dags
+      - airflow_dev_logs:/opt/airflow/logs
+      - airflow_dev_plugins:/opt/airflow/plugins
+      - ../airflow/dags:/opt/airflow/dags
+    depends_on:
+      - postgres
+    networks:
+      - dev-network
+
+  # Prometheus for development
+  prometheus:
+    image: prom/prometheus:latest
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_dev_data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/dev-rules:/etc/prometheus/rules
+    networks:
+      - dev-network
+
+  # Grafana for development
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=true
+      - GF_SECURITY_DISABLE_GRAVATAR=false
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_dev_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dev-dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - dev-network
+
+  # Redis for development
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - dev-network
+
+  # MinIO for S3-compatible storage (development)
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_dev_data:/data
+    networks:
+      - dev-network
+
+  # Adminer for database management
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8090:8080"
+    depends_on:
+      - postgres
+    networks:
+      - dev-network
+
+  # Jupyter Book documentation server
+  jupyter-book:
+    build:
+      context: ./jupyter
+      dockerfile: Dockerfile.jupyter-book
+      args:
+        - ENVIRONMENT=development
+    ports:
+      - "8081:8080"
+    volumes:
+      - ../../notebooks/documentation:/docs
+      - jupyter_book_dev_build:/build
+    command: >
+      bash -c "
+        pip install jupyter-book &&
+        jupyter-book build /docs --path-output /build &&
+        python -m http.server 8080 --directory /build/_build/html
+      "
+    networks:
+      - dev-network
+
+  # Code quality and linting service
+  code-quality:
+    build:
+      context: .
+      dockerfile: Dockerfile.code-quality
+    volumes:
+      - ../../:/workspace
+    working_dir: /workspace
+    command: >
+      bash -c "
+        echo 'Running code quality checks...' &&
+        flake8 --config .flake8 . &&
+        black --check --diff . &&
+        isort --check-only --diff . &&
+        mypy --config-file mypy.ini .
+      "
+    networks:
+      - dev-network
+
+  # Development tools container
+  dev-tools:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev-tools
+    volumes:
+      - ../../:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workspace
+    tty: true
+    stdin_open: true
+    networks:
+      - dev-network
+
+# Development volumes
+volumes:
+  postgres_dev_data:
+    driver: local
+  mlflow_dev_data:
+    driver: local
+  ge_dev_data:
+    driver: local
+  ge_dev_expectations:
+    driver: local
+  ge_dev_validations:
+    driver: local
+  jupyter_dev_data:
+    driver: local
+  jupyter_devops_data:
+    driver: local
+  airflow_dev_dags:
+    driver: local
+  airflow_dev_logs:
+    driver: local
+  airflow_dev_plugins:
+    driver: local
+  prometheus_dev_data:
+    driver: local
+  grafana_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+  minio_dev_data:
+    driver: local
+  jupyter_book_dev_build:
+    driver: local
+
+# Development network
+networks:
+  dev-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/24 

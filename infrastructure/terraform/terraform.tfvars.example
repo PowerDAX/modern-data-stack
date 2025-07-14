@@ -1,0 +1,336 @@
+# ===================================================================================
+# MODERN DATA STACK TERRAFORM CONFIGURATION
+# ===================================================================================
+# Example configuration file for Modern Data Stack infrastructure deployment
+# Copy this file to terraform.tfvars and customize for your environment
+# ===================================================================================
+
+# ===================================================================================
+# PROJECT CONFIGURATION
+# ===================================================================================
+
+project_name = "modern-data-stack-showcase"
+environment  = "dev"  # Options: dev, staging, prod
+owner        = "data-team"
+cost_center  = "engineering"
+
+# ===================================================================================
+# TERRAFORM STATE CONFIGURATION
+# ===================================================================================
+
+terraform_state_bucket = "your-org-modern-data-stack-terraform-state"
+terraform_lock_table   = "your-org-modern-data-stack-terraform-locks"
+
+# ===================================================================================
+# CLOUD PROVIDER CONFIGURATION
+# ===================================================================================
+
+# AWS Configuration
+aws_region = "us-west-2"
+
+# Azure Configuration (Optional)
+# azure_subscription_id = "your-azure-subscription-id"
+# azure_tenant_id       = "your-azure-tenant-id"
+
+# GCP Configuration (Optional)
+# gcp_project_id = "your-gcp-project-id"
+# gcp_region     = "us-central1"
+
+# ===================================================================================
+# NETWORK CONFIGURATION
+# ===================================================================================
+
+vpc_cidr            = "10.0.0.0/16"
+enable_vpn_gateway  = false
+allowed_cidr_blocks = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+
+# ===================================================================================
+# KUBERNETES CONFIGURATION
+# ===================================================================================
+
+kubernetes_version              = "1.28"
+cluster_endpoint_public_access  = true
+eks_node_instance_types         = ["t3.medium", "t3.large"]
+eks_data_processing_instance_types = ["m5.large", "m5.xlarge"]
+eks_node_group_min_size         = 1
+eks_node_group_max_size         = 5
+eks_node_group_desired_size     = 2
+
+# ===================================================================================
+# DATABASE CONFIGURATION
+# ===================================================================================
+
+# PostgreSQL Configuration
+rds_engine                    = "postgres"
+rds_engine_version           = "15.4"
+rds_instance_class           = "db.t3.medium"
+rds_allocated_storage        = 100
+rds_backup_retention_period  = 7
+rds_backup_window            = "03:00-04:00"
+rds_maintenance_window       = "sun:04:00-sun:05:00"
+rds_monitoring_interval      = 60
+
+# Redis Configuration
+redis_node_type            = "cache.t3.micro"
+redis_num_cache_clusters   = 1
+redis_parameter_group_name = "default.redis7"
+redis_engine_version       = "7.0"
+
+# ===================================================================================
+# STORAGE CONFIGURATION
+# ===================================================================================
+
+create_data_lake_bucket         = true
+create_backup_bucket            = true
+create_logs_bucket              = true
+enable_lifecycle_rules          = true
+enable_cross_region_replication = false
+replication_region              = "us-east-1"
+
+# ===================================================================================
+# SECURITY CONFIGURATION
+# ===================================================================================
+
+enable_waf                = true
+waf_rate_limit           = 10000
+kms_key_deletion_window  = 7
+
+# ===================================================================================
+# MONITORING CONFIGURATION
+# ===================================================================================
+
+create_cloudwatch_dashboard        = true
+log_retention_days                 = 30
+create_prometheus_workspace        = true
+prometheus_retention_days          = 15
+create_grafana_workspace           = true
+grafana_authentication_providers   = ["AWS_SSO"]
+
+# ===================================================================================
+# ALERTING CONFIGURATION
+# ===================================================================================
+
+alert_email_endpoints = [
+  "data-team@yourcompany.com",
+  "devops@yourcompany.com"
+]
+
+alert_sms_endpoints = [
+  "+1234567890"
+]
+
+slack_webhook_url = "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+slack_channel     = "#data-alerts"
+
+# PagerDuty Integration (Optional)
+# pagerduty_integration_key = "your-pagerduty-integration-key"
+
+# ===================================================================================
+# APPLICATION DEPLOYMENT CONFIGURATION
+# ===================================================================================
+
+deploy_airflow           = true
+deploy_mlflow           = true
+deploy_great_expectations = true
+deploy_superset         = false
+deploy_jupyter          = true
+
+# ===================================================================================
+# ENVIRONMENT-SPECIFIC CONFIGURATIONS
+# ===================================================================================
+
+# The environment_configs variable is pre-configured in variables.tf
+# Uncomment and customize if you need to override defaults
+
+# environment_configs = {
+#   dev = {
+#     instance_types           = ["t3.medium"]
+#     min_nodes               = 1
+#     max_nodes               = 3
+#     desired_nodes           = 1
+#     rds_instance_class      = "db.t3.micro"
+#     rds_allocated_storage   = 20
+#     enable_deletion_protection = false
+#     enable_backup           = false
+#     monitoring_level        = "basic"
+#   }
+#   
+#   staging = {
+#     instance_types           = ["t3.medium", "t3.large"]
+#     min_nodes               = 1
+#     max_nodes               = 5
+#     desired_nodes           = 2
+#     rds_instance_class      = "db.t3.small"
+#     rds_allocated_storage   = 50
+#     enable_deletion_protection = false
+#     enable_backup           = true
+#     monitoring_level        = "enhanced"
+#   }
+#   
+#   prod = {
+#     instance_types           = ["t3.large", "t3.xlarge"]
+#     min_nodes               = 2
+#     max_nodes               = 10
+#     desired_nodes           = 3
+#     rds_instance_class      = "db.t3.medium"
+#     rds_allocated_storage   = 100
+#     enable_deletion_protection = true
+#     enable_backup           = true
+#     monitoring_level        = "comprehensive"
+#   }
+# }
+
+# ===================================================================================
+# FEATURE FLAGS
+# ===================================================================================
+
+feature_flags = {
+  enable_service_mesh         = false
+  enable_policy_as_code       = false
+  enable_chaos_engineering    = false
+  enable_cost_optimization    = true
+  enable_compliance_scanning  = true
+  enable_advanced_networking  = false
+  enable_disaster_recovery    = false
+  enable_multi_region        = false
+}
+
+# ===================================================================================
+# ADVANCED CONFIGURATION
+# ===================================================================================
+
+advanced_configs = {
+  enable_spot_instances       = true
+  enable_graviton_instances   = false
+  enable_custom_ami          = false
+  custom_ami_id              = ""
+  enable_pod_identity        = false
+  enable_fargate_profiles    = false
+  enable_bottlerocket_nodes  = false
+  enable_gpu_nodes           = false
+  gpu_instance_types         = ["p3.2xlarge", "g4dn.xlarge"]
+}
+
+# ===================================================================================
+# SECURITY POLICIES
+# ===================================================================================
+
+security_policies = {
+  enforce_pod_security_standards = true
+  enable_network_policies        = true
+  enable_falco_monitoring        = false
+  enable_admission_controllers   = true
+  enable_image_scanning          = true
+  enable_runtime_security        = false
+  enable_secret_encryption       = true
+  enable_audit_logging           = true
+}
+
+# ===================================================================================
+# BACKUP AND DISASTER RECOVERY
+# ===================================================================================
+
+backup_config = {
+  enable_automated_backups      = true
+  backup_retention_days         = 30
+  enable_point_in_time_recovery = true
+  enable_cross_region_backup    = false
+  backup_schedule               = "cron(0 2 * * ? *)"
+  enable_backup_encryption      = true
+  backup_storage_class          = "STANDARD_IA"
+}
+
+# ===================================================================================
+# DEVELOPMENT ENVIRONMENT SPECIFIC
+# ===================================================================================
+
+# For development environment, you might want to:
+# - Use smaller instance types
+# - Disable expensive features
+# - Enable development tools
+
+# Development overrides (uncomment for dev environment)
+# rds_instance_class = "db.t3.micro"
+# rds_allocated_storage = 20
+# redis_node_type = "cache.t3.micro"
+# eks_node_instance_types = ["t3.small"]
+# eks_node_group_desired_size = 1
+# enable_cross_region_replication = false
+# prometheus_retention_days = 7
+# log_retention_days = 14
+
+# ===================================================================================
+# PRODUCTION ENVIRONMENT SPECIFIC
+# ===================================================================================
+
+# For production environment, you might want to:
+# - Use larger instance types
+# - Enable all security features
+# - Set up proper monitoring and alerting
+
+# Production overrides (uncomment for prod environment)
+# rds_instance_class = "db.r5.large"
+# rds_allocated_storage = 500
+# redis_node_type = "cache.r5.large"
+# eks_node_instance_types = ["m5.large", "m5.xlarge"]
+# eks_node_group_desired_size = 3
+# enable_cross_region_replication = true
+# prometheus_retention_days = 30
+# log_retention_days = 90
+# enable_vpn_gateway = true
+# waf_rate_limit = 50000
+
+# ===================================================================================
+# COST OPTIMIZATION SETTINGS
+# ===================================================================================
+
+# To minimize costs in development:
+# - Use spot instances
+# - Enable lifecycle policies
+# - Use smaller retention periods
+# - Disable expensive add-ons
+
+# Cost optimization (uncomment to enable)
+# advanced_configs = {
+#   enable_spot_instances = true
+#   enable_graviton_instances = true
+#   enable_custom_ami = false
+#   custom_ami_id = ""
+#   enable_pod_identity = false
+#   enable_fargate_profiles = false
+#   enable_bottlerocket_nodes = false
+#   enable_gpu_nodes = false
+#   gpu_instance_types = []
+# }
+
+# ===================================================================================
+# COMPLIANCE AND SECURITY SETTINGS
+# ===================================================================================
+
+# For regulated environments:
+# - Enable all security features
+# - Set up proper encryption
+# - Enable audit logging
+# - Set up compliance scanning
+
+# Compliance overrides (uncomment for regulated environments)
+# security_policies = {
+#   enforce_pod_security_standards = true
+#   enable_network_policies = true
+#   enable_falco_monitoring = true
+#   enable_admission_controllers = true
+#   enable_image_scanning = true
+#   enable_runtime_security = true
+#   enable_secret_encryption = true
+#   enable_audit_logging = true
+# }
+
+# backup_config = {
+#   enable_automated_backups = true
+#   backup_retention_days = 90
+#   enable_point_in_time_recovery = true
+#   enable_cross_region_backup = true
+#   backup_schedule = "cron(0 2 * * ? *)"
+#   enable_backup_encryption = true
+#   backup_storage_class = "STANDARD_IA"
+# } 

@@ -1,0 +1,284 @@
+# Table of Contents for Modern Data Stack Showcase - Jupyter Notebooks Documentation
+
+format: jb-book
+root: index
+title: "Modern Data Stack Showcase - Jupyter Notebooks Documentation"
+
+parts:
+  - caption: "Getting Started"
+    chapters:
+      - file: getting-started/introduction
+      - file: getting-started/installation
+      - file: getting-started/quick-start
+      - file: getting-started/environment-setup
+      - file: getting-started/architecture-overview
+      
+  - caption: "Documentation Standards"
+    chapters:
+      - file: standards/documentation-guidelines
+      - file: standards/code-style-guide
+      - file: standards/naming-conventions
+      - file: standards/template-structure
+      - file: standards/best-practices
+      
+  - caption: "Shared Components"
+    chapters:
+      - file: shared-components/overview
+      - file: shared-components/data-connectors
+        sections:
+          - file: shared-components/data-connectors/database-connector
+          - file: shared-components/data-connectors/file-connector
+          - file: shared-components/data-connectors/cloud-storage-connector
+          - file: shared-components/data-connectors/api-connector
+      - file: shared-components/visualization-utils
+        sections:
+          - file: shared-components/visualization-utils/plot-styler
+          - file: shared-components/visualization-utils/statistical-plots
+          - file: shared-components/visualization-utils/interactive-dashboards
+          - file: shared-components/visualization-utils/export-utilities
+      - file: shared-components/ml-utils
+        sections:
+          - file: shared-components/ml-utils/feature-engineering
+          - file: shared-components/ml-utils/model-evaluation
+          - file: shared-components/ml-utils/hyperparameter-tuning
+      - file: shared-components/devops-utils
+        sections:
+          - file: shared-components/devops-utils/infrastructure-monitoring
+          - file: shared-components/devops-utils/deployment-automation
+          - file: shared-components/devops-utils/configuration-management
+          
+  - caption: "Notebook Templates"
+    chapters:
+      - file: templates/overview
+      - file: templates/data-exploration-template
+        sections:
+          - file: templates/data-exploration/structure
+          - file: templates/data-exploration/best-practices
+          - file: templates/data-exploration/examples
+      - file: templates/ml-workflow-template
+        sections:
+          - file: templates/ml-workflow/structure
+          - file: templates/ml-workflow/mlops-integration
+          - file: templates/ml-workflow/examples
+      - file: templates/devops-automation-template
+        sections:
+          - file: templates/devops-automation/structure
+          - file: templates/devops-automation/cicd-integration
+          - file: templates/devops-automation/examples
+      - file: templates/business-intelligence-template
+        sections:
+          - file: templates/business-intelligence/structure
+          - file: templates/business-intelligence/powerbi-integration
+          - file: templates/business-intelligence/examples
+          
+  - caption: "Data Exploration Notebooks"
+    chapters:
+      - file: data-exploration/overview
+      - file: data-exploration/retail-connector-eda
+        sections:
+          - file: data-exploration/retail-connector/data-profiling
+          - file: data-exploration/retail-connector/quality-assessment
+          - file: data-exploration/retail-connector/statistical-analysis
+          - file: data-exploration/retail-connector/insights-recommendations
+      - file: data-exploration/grocery-connector-eda
+        sections:
+          - file: data-exploration/grocery-connector/data-profiling
+          - file: data-exploration/grocery-connector/quality-assessment
+          - file: data-exploration/grocery-connector/statistical-analysis
+          - file: data-exploration/grocery-connector/insights-recommendations
+      - file: data-exploration/harmonized-data-analysis
+        sections:
+          - file: data-exploration/harmonized/cross-connector-analysis
+          - file: data-exploration/harmonized/data-integration-validation
+          - file: data-exploration/harmonized/unified-insights
+      - file: data-exploration/data-quality-monitoring
+        sections:
+          - file: data-exploration/quality-monitoring/automated-checks
+          - file: data-exploration/quality-monitoring/anomaly-detection
+          - file: data-exploration/quality-monitoring/reporting-dashboards
+          
+  - caption: "ML Workflow Notebooks"
+    chapters:
+      - file: ml-workflows/overview
+      - file: ml-workflows/feature-engineering
+        sections:
+          - file: ml-workflows/feature-engineering/retail-features
+          - file: ml-workflows/feature-engineering/time-series-features
+          - file: ml-workflows/feature-engineering/categorical-encoding
+          - file: ml-workflows/feature-engineering/feature-validation
+      - file: ml-workflows/model-training
+        sections:
+          - file: ml-workflows/model-training/supervised-learning
+          - file: ml-workflows/model-training/unsupervised-learning
+          - file: ml-workflows/model-training/deep-learning
+          - file: ml-workflows/model-training/ensemble-methods
+      - file: ml-workflows/model-evaluation
+        sections:
+          - file: ml-workflows/model-evaluation/performance-metrics
+          - file: ml-workflows/model-evaluation/cross-validation
+          - file: ml-workflows/model-evaluation/model-interpretation
+          - file: ml-workflows/model-evaluation/bias-fairness
+      - file: ml-workflows/model-deployment
+        sections:
+          - file: ml-workflows/model-deployment/containerization
+          - file: ml-workflows/model-deployment/api-endpoints
+          - file: ml-workflows/model-deployment/batch-inference
+          - file: ml-workflows/model-deployment/monitoring-alerting
+      - file: ml-workflows/model-monitoring
+        sections:
+          - file: ml-workflows/model-monitoring/performance-tracking
+          - file: ml-workflows/model-monitoring/data-drift-detection
+          - file: ml-workflows/model-monitoring/model-retraining
+          - file: ml-workflows/model-monitoring/incident-response
+          
+  - caption: "DevOps Automation Notebooks"
+    chapters:
+      - file: devops-automation/overview
+      - file: devops-automation/infrastructure-monitoring
+        sections:
+          - file: devops-automation/infrastructure/system-health
+          - file: devops-automation/infrastructure/resource-utilization
+          - file: devops-automation/infrastructure/performance-analysis
+          - file: devops-automation/infrastructure/capacity-planning
+      - file: devops-automation/cicd-pipeline-management
+        sections:
+          - file: devops-automation/cicd/pipeline-automation
+          - file: devops-automation/cicd/deployment-orchestration
+          - file: devops-automation/cicd/testing-automation
+          - file: devops-automation/cicd/release-management
+      - file: devops-automation/database-administration
+        sections:
+          - file: devops-automation/database/backup-recovery
+          - file: devops-automation/database/performance-tuning
+          - file: devops-automation/database/migration-automation
+          - file: devops-automation/database/security-compliance
+      - file: devops-automation/kubernetes-management
+        sections:
+          - file: devops-automation/kubernetes/cluster-management
+          - file: devops-automation/kubernetes/workload-optimization
+          - file: devops-automation/kubernetes/security-hardening
+          - file: devops-automation/kubernetes/troubleshooting
+          
+  - caption: "Business Intelligence Notebooks"
+    chapters:
+      - file: business-intelligence/overview
+      - file: business-intelligence/automated-reporting
+        sections:
+          - file: business-intelligence/reporting/executive-dashboards
+          - file: business-intelligence/reporting/operational-reports
+          - file: business-intelligence/reporting/financial-analysis
+          - file: business-intelligence/reporting/performance-kpis
+      - file: business-intelligence/powerbi-integration
+        sections:
+          - file: business-intelligence/powerbi/data-modeling
+          - file: business-intelligence/powerbi/report-generation
+          - file: business-intelligence/powerbi/dashboard-automation
+          - file: business-intelligence/powerbi/embedding-integration
+      - file: business-intelligence/anomaly-detection
+        sections:
+          - file: business-intelligence/anomaly/statistical-detection
+          - file: business-intelligence/anomaly/machine-learning-detection
+          - file: business-intelligence/anomaly/alert-automation
+          - file: business-intelligence/anomaly/root-cause-analysis
+      - file: business-intelligence/forecast-generation
+        sections:
+          - file: business-intelligence/forecasting/time-series-forecasting
+          - file: business-intelligence/forecasting/demand-planning
+          - file: business-intelligence/forecasting/scenario-modeling
+          - file: business-intelligence/forecasting/forecast-validation
+          
+  - caption: "Interactive Applications"
+    chapters:
+      - file: interactive-applications/overview
+      - file: interactive-applications/streamlit-dashboards
+        sections:
+          - file: interactive-applications/streamlit/dashboard-components
+          - file: interactive-applications/streamlit/user-interaction
+          - file: interactive-applications/streamlit/deployment-guide
+      - file: interactive-applications/plotly-dash-applications
+        sections:
+          - file: interactive-applications/plotly-dash/application-structure
+          - file: interactive-applications/plotly-dash/callback-patterns
+          - file: interactive-applications/plotly-dash/styling-themes
+      - file: interactive-applications/voila-dashboards
+        sections:
+          - file: interactive-applications/voila/notebook-conversion
+          - file: interactive-applications/voila/template-customization
+          - file: interactive-applications/voila/deployment-options
+      - file: interactive-applications/jupyter-widgets
+        sections:
+          - file: interactive-applications/jupyter-widgets/widget-library
+          - file: interactive-applications/jupyter-widgets/custom-widgets
+          - file: interactive-applications/jupyter-widgets/interaction-patterns
+          
+  - caption: "Testing & Validation"
+    chapters:
+      - file: testing-validation/overview
+      - file: testing-validation/notebook-testing
+        sections:
+          - file: testing-validation/notebook-testing/unit-testing
+          - file: testing-validation/notebook-testing/integration-testing
+          - file: testing-validation/notebook-testing/regression-testing
+      - file: testing-validation/data-quality-testing
+        sections:
+          - file: testing-validation/data-quality/schema-validation
+          - file: testing-validation/data-quality/data-integrity
+          - file: testing-validation/data-quality/completeness-checks
+      - file: testing-validation/model-performance-testing
+        sections:
+          - file: testing-validation/model-performance/accuracy-testing
+          - file: testing-validation/model-performance/performance-benchmarking
+          - file: testing-validation/model-performance/robustness-testing
+          
+  - caption: "Deployment & Production"
+    chapters:
+      - file: deployment-production/overview
+      - file: deployment-production/containerization
+        sections:
+          - file: deployment-production/containerization/docker-images
+          - file: deployment-production/containerization/kubernetes-deployment
+          - file: deployment-production/containerization/helm-charts
+      - file: deployment-production/cicd-integration
+        sections:
+          - file: deployment-production/cicd/pipeline-configuration
+          - file: deployment-production/cicd/automated-testing
+          - file: deployment-production/cicd/deployment-strategies
+      - file: deployment-production/monitoring-alerting
+        sections:
+          - file: deployment-production/monitoring/metrics-collection
+          - file: deployment-production/monitoring/alert-configuration
+          - file: deployment-production/monitoring/dashboard-setup
+          
+  - caption: "Troubleshooting & FAQ"
+    chapters:
+      - file: troubleshooting/overview
+      - file: troubleshooting/common-issues
+      - file: troubleshooting/performance-optimization
+      - file: troubleshooting/debugging-techniques
+      - file: troubleshooting/error-handling
+      - file: troubleshooting/faq
+      
+  - caption: "API Reference"
+    chapters:
+      - file: api-reference/overview
+      - file: api-reference/data-connectors-api
+      - file: api-reference/visualization-utils-api
+      - file: api-reference/ml-utils-api
+      - file: api-reference/devops-utils-api
+      - file: api-reference/configuration-api
+      
+  - caption: "Contributing"
+    chapters:
+      - file: contributing/overview
+      - file: contributing/development-setup
+      - file: contributing/coding-standards
+      - file: contributing/testing-guidelines
+      - file: contributing/documentation-guidelines
+      - file: contributing/pull-request-process
+      
+  - caption: "Appendices"
+    chapters:
+      - file: appendices/glossary
+      - file: appendices/references
+      - file: appendices/change-log
+      - file: appendices/license 

@@ -1,0 +1,109 @@
+table 'Dim Store'
+	annotation PBI_Id = 85a4b5c6-d7e8-4f9a-b0c1-2d3e4f5a6b7c
+
+	annotation '$grocery_connector' = 'Dim Location'
+	annotation '$retail_connector' = 'Dim Store'
+	annotation '$harmonized' = 'Dim Store'
+
+	annotation '$grocery_connector.BigQuery.TableId' = 'modern-data-stack-showcase.dbt_analytics.analytics_grocery_connector_dim_location'
+	annotation '$retail_connector.BigQuery.TableId' = 'modern-data-stack-showcase.dbt_analytics.analytics_retail_connector_dim_store'
+	annotation '$harmonized.BigQuery.TableId' = 'modern-data-stack-showcase.dbt_analytics.analytics_harmonized_dim_store'
+
+	column store_id
+		dataType: string
+		isHidden
+		displayFolder: Keys
+		sourceColumn: store_id
+
+	column Store
+		dataType: string
+		sourceColumn: store
+		annotation '$grocery_connector.sourceColumn' = "location"
+
+    column 'Store Number'
+		dataType: string
+		sourceColumn: store_number
+		annotation '$grocery_connector.sourceColumn' = "location_number"
+
+	column 'Store Status'
+		dataType: string
+		sourceColumn: store_status
+		annotation '$grocery_connector.sourceColumn' = "location_status"
+
+    column 'Store Address'
+		dataType: string
+		sourceColumn: store_address
+		annotation '$grocery_connector.sourceColumn' = "location_address"
+
+    column 'Store City'
+        dataType: string
+        sourceColumn: store_city
+        annotation '$grocery_connector.sourceColumn' = "location_city"
+
+    column 'Store State'
+        dataType: string
+        sourceColumn: store_state
+        annotation '$grocery_connector.sourceColumn' = "location_state"
+
+    column 'Store Zip'
+        dataType: string
+        sourceColumn: store_zip
+        annotation '$grocery_connector.sourceColumn' = "location_zip"
+
+    column 'Store Country'
+        dataType: string
+        sourceColumn: store_country
+        annotation '$grocery_connector.sourceColumn' = "location_country"
+
+    column 'Store Latitude'
+		dataType: string
+		sourceColumn: store_latitude
+		annotation '$grocery_connector.sourceColumn' = "location_latitude"
+
+    column 'Store Longitude'
+		dataType: string
+		sourceColumn: store_longitude
+		annotation '$grocery_connector.sourceColumn' = "location_longitude"
+
+    column 'Store Format'
+		dataType: string
+		sourceColumn: store_format
+		annotation '$grocery_connector.sourceColumn' = "location_format"
+
+    column 'Store Type'
+		dataType: string
+		sourceColumn: store_type
+		annotation '$grocery_connector.sourceColumn' = "location_type"
+    
+    column 'Store Manager'
+		dataType: string
+		sourceColumn: store_manager
+		annotation '$grocery_connector.sourceColumn' = "location_manager"
+
+    column 'Store Phone'
+		dataType: string
+		sourceColumn: store_phone
+		annotation '$grocery_connector.sourceColumn' = "location_phone"
+
+	column 'Store Chain'
+		dataType: string
+		sourceColumn: store_chain
+		annotation '$grocery_connector.sourceColumn' = "location_chain"
+
+	column 'Store District'
+		dataType: string
+		sourceColumn: store_district
+		annotation '$grocery_connector.sourceColumn' = "location_district"
+
+	column 'Store Region'
+		dataType: string
+		sourceColumn: store_region
+		annotation '$grocery_connector.sourceColumn' = "location_region"
+
+	column retailer_id
+		dataType: string
+		isHidden
+		displayFolder: Keys
+		sourceColumn: retailer_id
+
+	annotation PBI_ResultType = Table 

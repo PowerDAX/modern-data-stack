@@ -1,0 +1,126 @@
+table 'Dim Time Period'
+	annotation PBI_Id = 2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e
+
+	annotation '$grocery_connector' = 'Dim Time Period'
+	annotation '$retail_connector' = 'Dim Time Period'
+	annotation '$harmonized' = 'Dim Time Period'
+
+	column time_period_key
+		dataType: int64
+		isHidden
+		displayFolder: Keys
+		sourceColumn: time_period_key
+
+	column 'Time Period'
+		dataType: string
+		sourceColumn: time_period
+
+	column 'Time Period Type'
+		dataType: string
+		sourceColumn: time_period_type
+
+	column 'Start Date'
+		dataType: dateTime
+		sourceColumn: start_date
+		formatString: Short Date
+
+	column 'End Date'
+		dataType: dateTime
+		sourceColumn: end_date
+		formatString: Short Date
+
+	column 'Days Count'
+		dataType: int64
+		sourceColumn: days_count
+
+	column 'Is Current'
+		dataType: boolean
+		sourceColumn: is_current
+
+	column 'Sort Order'
+		dataType: int64
+		sourceColumn: sort_order
+
+	column 'Period Category'
+		dataType: string
+		sourceColumn: period_category
+
+	column 'Reference Date'
+		dataType: dateTime
+		sourceColumn: reference_date
+		formatString: Short Date
+
+	partition 'Dim Time Period' = m
+		mode: import
+		source = ```
+			let
+				// Base reference date - today
+				ReferenceDate = Date.From(DateTime.LocalNow()),
+				
+				// Current week (Monday to Sunday)
+				CurrentWeekStart = Date.StartOfWeek(ReferenceDate, Day.Monday),
+				CurrentWeekEnd = Date.EndOfWeek(ReferenceDate, Day.Monday),
+				
+				// Last full week (the week before current week)
+				LastWeekStart = Date.AddDays(CurrentWeekStart, -7),
+				LastWeekEnd = Date.AddDays(CurrentWeekEnd, -7),
+				
+				// Same week last year (Monday start - 364 days to get the Monday start of the same week last year)
+				SameWeekLastYearStart = Date.AddDays(CurrentWeekStart, -364),
+				SameWeekLastYearEnd = Date.AddDays(CurrentWeekEnd, -364),
+				
+				// Current year
+				CurrentYearStart = Date.StartOfYear(ReferenceDate),
+				CurrentYearEnd = Date.EndOfYear(ReferenceDate),
+				
+				// Last year
+				LastYearStart = Date.StartOfYear(Date.AddYears(ReferenceDate, -1)),
+				LastYearEnd = Date.EndOfYear(Date.AddYears(ReferenceDate, -1)),
+				
+				// Create time periods table
+				TimePeriods = Table.FromRows({
+					{1, "Current Week", "Weekly", CurrentWeekStart, CurrentWeekEnd, Number.From(CurrentWeekEnd - CurrentWeekStart) + 1, true, 1, "Current", ReferenceDate},
+					{2, "Last Week", "Weekly", LastWeekStart, LastWeekEnd, Number.From(LastWeekEnd - LastWeekStart) + 1, false, 2, "Previous", ReferenceDate},
+					{3, "Last 2 Weeks", "Weekly", Date.AddDays(LastWeekStart, -7), LastWeekEnd, Number.From(LastWeekEnd - Date.AddDays(LastWeekStart, -7)) + 1, false, 3, "Previous", ReferenceDate},
+					{4, "Last 4 Weeks", "Weekly", Date.AddDays(LastWeekStart, -21), LastWeekEnd, Number.From(LastWeekEnd - Date.AddDays(LastWeekStart, -21)) + 1, false, 4, "Previous", ReferenceDate},
+					{5, "Last 13 Weeks", "Weekly", Date.AddDays(LastWeekStart, -84), LastWeekEnd, Number.From(LastWeekEnd - Date.AddDays(LastWeekStart, -84)) + 1, false, 5, "Previous", ReferenceDate},
+					{6, "Last 26 Weeks", "Weekly", Date.AddDays(LastWeekStart, -175), LastWeekEnd, Number.From(LastWeekEnd - Date.AddDays(LastWeekStart, -175)) + 1, false, 6, "Previous", ReferenceDate},
+					{7, "Last 52 Weeks", "Weekly", Date.AddDays(LastWeekStart, -357), LastWeekEnd, Number.From(LastWeekEnd - Date.AddDays(LastWeekStart, -357)) + 1, false, 7, "Previous", ReferenceDate},
+					{8, "Current Year", "Yearly", CurrentYearStart, CurrentYearEnd, Number.From(CurrentYearEnd - CurrentYearStart) + 1, true, 8, "Current", ReferenceDate},
+					{9, "Last Year", "Yearly", LastYearStart, LastYearEnd, Number.From(LastYearEnd - LastYearStart) + 1, false, 9, "Previous", ReferenceDate},
+					{10, "Last Week to Date", "Weekly", LastWeekStart, Date.AddDays(LastWeekStart, Date.DayOfWeek(ReferenceDate, Day.Monday)), Number.From(Date.AddDays(LastWeekStart, Date.DayOfWeek(ReferenceDate, Day.Monday)) - LastWeekStart) + 1, false, 10, "To Date", ReferenceDate},
+					{11, "Same Week Last Year", "Weekly", SameWeekLastYearStart, SameWeekLastYearEnd, Number.From(SameWeekLastYearEnd - SameWeekLastYearStart) + 1, false, 11, "Same Period", ReferenceDate},
+					{12, "Same Week Last Year to Date", "Weekly", SameWeekLastYearStart, Date.AddDays(SameWeekLastYearStart, Date.DayOfWeek(ReferenceDate, Day.Monday)), Number.From(Date.AddDays(SameWeekLastYearStart, Date.DayOfWeek(ReferenceDate, Day.Monday)) - SameWeekLastYearStart) + 1, false, 12, "Same Period", ReferenceDate},
+					{13, "Last Year to Date", "Yearly", LastYearStart, Date.AddDays(LastYearStart, Date.DayOfYear(ReferenceDate) - 1), Number.From(Date.AddDays(LastYearStart, Date.DayOfYear(ReferenceDate) - 1) - LastYearStart) + 1, false, 13, "To Date", ReferenceDate},
+					{14, "Year to Date", "Yearly", CurrentYearStart, ReferenceDate, Number.From(ReferenceDate - CurrentYearStart) + 1, true, 14, "To Date", ReferenceDate},
+					{15, "Month to Date", "Monthly", Date.StartOfMonth(ReferenceDate), ReferenceDate, Number.From(ReferenceDate - Date.StartOfMonth(ReferenceDate)) + 1, true, 15, "To Date", ReferenceDate},
+					{16, "Week to Date", "Weekly", CurrentWeekStart, ReferenceDate, Number.From(ReferenceDate - CurrentWeekStart) + 1, true, 16, "To Date", ReferenceDate},
+					{17, "Last Month", "Monthly", Date.StartOfMonth(Date.AddMonths(ReferenceDate, -1)), Date.EndOfMonth(Date.AddMonths(ReferenceDate, -1)), Number.From(Date.EndOfMonth(Date.AddMonths(ReferenceDate, -1)) - Date.StartOfMonth(Date.AddMonths(ReferenceDate, -1))) + 1, false, 17, "Previous", ReferenceDate},
+					{18, "Last Month to Date", "Monthly", Date.StartOfMonth(Date.AddMonths(ReferenceDate, -1)), Date.AddDays(Date.StartOfMonth(Date.AddMonths(ReferenceDate, -1)), Date.Day(ReferenceDate) - 1), Number.From(Date.AddDays(Date.StartOfMonth(Date.AddMonths(ReferenceDate, -1)), Date.Day(ReferenceDate) - 1) - Date.StartOfMonth(Date.AddMonths(ReferenceDate, -1))) + 1, false, 18, "To Date", ReferenceDate},
+					{19, "Current Month", "Monthly", Date.StartOfMonth(ReferenceDate), Date.EndOfMonth(ReferenceDate), Number.From(Date.EndOfMonth(ReferenceDate) - Date.StartOfMonth(ReferenceDate)) + 1, true, 19, "Current", ReferenceDate},
+					{20, "Rolling 30 Days", "Daily", Date.AddDays(ReferenceDate, -29), ReferenceDate, 30, false, 20, "Rolling", ReferenceDate},
+					{21, "Rolling 60 Days", "Daily", Date.AddDays(ReferenceDate, -59), ReferenceDate, 60, false, 21, "Rolling", ReferenceDate},
+					{22, "Rolling 90 Days", "Daily", Date.AddDays(ReferenceDate, -89), ReferenceDate, 90, false, 22, "Rolling", ReferenceDate},
+					{23, "Current Quarter", "Quarterly", Date.StartOfQuarter(ReferenceDate), Date.EndOfQuarter(ReferenceDate), Number.From(Date.EndOfQuarter(ReferenceDate) - Date.StartOfQuarter(ReferenceDate)) + 1, true, 23, "Current", ReferenceDate},
+					{24, "Last Quarter", "Quarterly", Date.StartOfQuarter(Date.AddMonths(ReferenceDate, -3)), Date.EndOfQuarter(Date.AddMonths(ReferenceDate, -3)), Number.From(Date.EndOfQuarter(Date.AddMonths(ReferenceDate, -3)) - Date.StartOfQuarter(Date.AddMonths(ReferenceDate, -3))) + 1, false, 24, "Previous", ReferenceDate},
+					{25, "Quarter to Date", "Quarterly", Date.StartOfQuarter(ReferenceDate), ReferenceDate, Number.From(ReferenceDate - Date.StartOfQuarter(ReferenceDate)) + 1, true, 25, "To Date", ReferenceDate}
+				}, {"time_period_key", "time_period", "time_period_type", "start_date", "end_date", "days_count", "is_current", "sort_order", "period_category", "reference_date"}),
+				
+				// Type the columns
+				TypedTable = Table.TransformColumnTypes(TimePeriods, {
+					{"time_period_key", Int64.Type},
+					{"time_period", type text},
+					{"time_period_type", type text},
+					{"start_date", type date},
+					{"end_date", type date},
+					{"days_count", Int64.Type},
+					{"is_current", type logical},
+					{"sort_order", Int64.Type},
+					{"period_category", type text},
+					{"reference_date", type date}
+				})
+			in
+				TypedTable
+		```
+
+	annotation PBI_ResultType = Table 

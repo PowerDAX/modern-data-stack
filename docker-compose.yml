@@ -1,0 +1,224 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database for local development and testing
+  postgres:
+    image: postgres:15
+    container_name: modern-data-stack-postgres
+    environment:
+      POSTGRES_DB: showcase_db
+      POSTGRES_USER: showcase_user
+      POSTGRES_PASSWORD: showcase_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sample-data/raw:/docker-entrypoint-initdb.d
+    networks:
+      - data-stack-network
+
+  # dbt development environment with documentation server
+  dbt-docs:
+    build:
+      context: ./infrastructure/docker/dbt
+      dockerfile: Dockerfile
+    container_name: modern-data-stack-dbt-docs
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dbt-analytics:/usr/app/dbt
+      - ./sample-data:/usr/app/data
+    environment:
+      - DBT_PROFILES_DIR=/usr/app/.dbt
+      - DBT_PROJECT_DIR=/usr/app/dbt
+    depends_on:
+      - postgres
+    networks:
+      - data-stack-network
+    command: >
+      sh -c "cd /usr/app/dbt &&
+             dbt deps &&
+             dbt seed &&
+             dbt run &&
+             dbt docs generate &&
+             dbt docs serve --host 0.0.0.0 --port 8080"
+
+  # Jupyter Lab for notebook development and experimentation
+  jupyter:
+    build:
+      context: ./infrastructure/docker/jupyter
+      dockerfile: Dockerfile
+    container_name: modern-data-stack-jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/home/jovyan/work/notebooks
+      - ./sample-data:/home/jovyan/work/data
+      - ./dbt-analytics:/home/jovyan/work/dbt-analytics
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=modern-data-stack-showcase
+    networks:
+      - data-stack-network
+
+  # Apache Superset for advanced analytics and visualization
+  superset:
+    image: apache/superset:latest
+    container_name: modern-data-stack-superset
+    ports:
+      - "8088:8088"
+    environment:
+      - SUPERSET_SECRET_KEY=modern-data-stack-showcase-secret-key
+    volumes:
+      - superset_data:/app/superset_home
+    depends_on:
+      - postgres
+    networks:
+      - data-stack-network
+
+  # Grafana for monitoring and observability
+  grafana:
+    image: grafana/grafana:latest
+    container_name: modern-data-stack-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=showcase
+      - GF_SECURITY_ADMIN_USER=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/monitoring/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - data-stack-network
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: modern-data-stack-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - data-stack-network
+
+  # MinIO for S3-compatible object storage
+  minio:
+    image: minio/minio:latest
+    container_name: modern-data-stack-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - data-stack-network
+
+  # Redis for caching and session storage
+  redis:
+    image: redis:7-alpine
+    container_name: modern-data-stack-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - data-stack-network
+
+  # Apache Airflow for workflow orchestration (lightweight single-node setup)
+  airflow:
+    image: apache/airflow:2.7.0
+    container_name: modern-data-stack-airflow
+    ports:
+      - "8081:8080"
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://showcase_user:showcase_password@postgres/showcase_db
+      - AIRFLOW__CORE__FERNET_KEY=ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg=
+      - AIRFLOW__WEBSERVER__SECRET_KEY=showcase_secret_key
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
+    volumes:
+      - ./infrastructure/airflow/dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - data-stack-network
+    command: >
+      bash -c "airflow db init &&
+               airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password admin &&
+               airflow webserver"
+
+  # MLflow for machine learning lifecycle management
+  mlflow:
+    build:
+      context: ./infrastructure/docker/mlflow
+      dockerfile: Dockerfile
+    container_name: modern-data-stack-mlflow
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=postgresql://showcase_user:showcase_password@postgres:5432/showcase_db
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=s3://mlflow-artifacts
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+    depends_on:
+      - postgres
+      - minio
+    networks:
+      - data-stack-network
+    command: >
+      sh -c "mlflow server 
+             --backend-store-uri postgresql://showcase_user:showcase_password@postgres:5432/showcase_db
+             --default-artifact-root s3://mlflow-artifacts
+             --host 0.0.0.0
+             --port 5000"
+
+  # Great Expectations for data quality validation
+  great-expectations:
+    build:
+      context: ./infrastructure/docker/great-expectations
+      dockerfile: Dockerfile
+    container_name: modern-data-stack-great-expectations
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./tools/testing/great_expectations:/great_expectations
+      - ./sample-data:/data
+    networks:
+      - data-stack-network
+
+networks:
+  data-stack-network:
+    driver: bridge
+    name: modern-data-stack-network
+
+volumes:
+  postgres_data:
+    name: modern-data-stack-postgres-data
+  grafana_data:
+    name: modern-data-stack-grafana-data
+  prometheus_data:
+    name: modern-data-stack-prometheus-data
+  minio_data:
+    name: modern-data-stack-minio-data
+  redis_data:
+    name: modern-data-stack-redis-data
+  airflow_logs:
+    name: modern-data-stack-airflow-logs
+  superset_data:
+    name: modern-data-stack-superset-data 

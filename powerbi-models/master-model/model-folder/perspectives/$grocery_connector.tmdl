@@ -1,0 +1,245 @@
+perspective $grocery_connector
+
+	perspectiveTable 'Fact Sales'
+
+		perspectiveMeasure 'Sales Amount'
+
+		perspectiveMeasure 'Sales Quantity'
+
+		perspectiveMeasure 'Regular Sales Amount'
+
+		perspectiveMeasure 'Regular Sales Quantity'
+
+		perspectiveMeasure 'Promotional Sales Amount'
+
+		perspectiveMeasure 'Promotional Sales Quantity'
+
+		perspectiveMeasure 'Average Selling Price'
+
+		perspectiveMeasure 'Total Sales Amount (Grocery)'
+
+		perspectiveMeasure 'Total Sales Quantity (Grocery)'
+
+		perspectiveMeasure 'Promotional Sales %'
+
+		perspectiveMeasure 'Transaction Count'
+
+		perspectiveMeasure 'Product Count'
+
+		perspectiveMeasure 'Store Count'
+
+		perspectiveColumn sales_id
+
+		perspectiveColumn date_key
+
+		perspectiveColumn store_id
+
+		perspectiveColumn product_id
+
+		perspectiveColumn sales_amount
+
+		perspectiveColumn sales_quantity
+
+		perspectiveColumn regular_sales_amount
+
+		perspectiveColumn regular_sales_quantity
+
+		perspectiveColumn promotional_sales_amount
+
+		perspectiveColumn promotional_sales_quantity
+
+		perspectiveColumn retailer_id
+
+	perspectiveTable 'Fact Inventory'
+
+		perspectiveMeasure 'On Hand Quantity'
+
+		perspectiveMeasure 'On Hand Amount'
+
+		perspectiveMeasure 'On Order Quantity'
+
+		perspectiveMeasure 'On Order Amount'
+
+		perspectiveMeasure 'Allocated Quantity'
+
+		perspectiveMeasure 'Available Quantity'
+
+		perspectiveMeasure 'Total Inventory Value'
+
+		perspectiveMeasure 'Available for Sale Quantity'
+
+		perspectiveMeasure 'Inventory Utilization %'
+
+		perspectiveMeasure 'Average Inventory Value'
+
+		perspectiveMeasure 'Inventory Record Count'
+
+		perspectiveMeasure 'Product Count'
+
+		perspectiveMeasure 'Store Count'
+
+		perspectiveMeasure 'On Hand Quantity Weekly Average'
+
+		perspectiveMeasure 'On Hand Amount Weekly Average'
+		
+		perspectiveMeasure 'Weeks of Supply'
+
+		perspectiveColumn inventory_id
+
+		perspectiveColumn date_key
+
+		perspectiveColumn store_id
+
+		perspectiveColumn product_id
+
+		perspectiveColumn on_hand_quantity
+
+		perspectiveColumn on_hand_amount
+
+		perspectiveColumn on_order_quantity
+
+		perspectiveColumn on_order_amount
+
+		perspectiveColumn allocated_quantity
+
+		perspectiveColumn available_quantity
+
+		perspectiveColumn retailer_id
+
+	perspectiveTable 'Dim Product'
+
+		perspectiveColumn product_id
+
+		perspectiveColumn Product
+
+		perspectiveColumn 'Product Brand'
+
+		perspectiveColumn 'Product Category'
+
+		perspectiveColumn 'Product Subcategory'
+
+		perspectiveColumn 'Product Supplier'
+
+		perspectiveColumn 'Product Description'
+
+		perspectiveColumn 'Product Status'
+
+		perspectiveColumn 'Product UPC'
+
+		perspectiveColumn 'Product Pack Size'
+
+		perspectiveColumn 'Product Unit of Measure'
+
+		perspectiveColumn retailer_id
+
+	perspectiveTable 'Dim Store'
+
+		perspectiveColumn store_id
+
+		perspectiveColumn Store
+
+		perspectiveColumn 'Store Number'
+
+		perspectiveColumn 'Store Status'
+
+		perspectiveColumn 'Store Address'
+
+		perspectiveColumn 'Store City'
+
+		perspectiveColumn 'Store State'
+
+		perspectiveColumn 'Store Zip'
+
+		perspectiveColumn 'Store Country'
+
+		perspectiveColumn 'Store Latitude'
+
+		perspectiveColumn 'Store Longitude'
+
+		perspectiveColumn 'Store Format'
+
+		perspectiveColumn 'Store Type'
+
+		perspectiveColumn 'Store Manager'
+
+		perspectiveColumn 'Store Phone'
+
+		perspectiveColumn 'Store Chain'
+
+		perspectiveColumn 'Store District'
+
+		perspectiveColumn 'Store Region'
+
+		perspectiveColumn retailer_id
+
+	perspectiveTable 'Dim Calendar'
+
+		perspectiveColumn date_key
+
+		perspectiveColumn Date
+
+		perspectiveColumn Year
+
+		perspectiveColumn 'Year Month'
+
+		perspectiveColumn 'Year Quarter'
+
+		perspectiveColumn 'Year Week'
+
+		perspectiveColumn 'Month Name'
+
+		perspectiveColumn 'Month Number'
+
+		perspectiveColumn 'Month Start'
+
+		perspectiveColumn 'Month End'
+
+		perspectiveColumn 'Week Start'
+
+		perspectiveColumn 'Week End'
+
+		perspectiveColumn 'Week Number'
+
+		perspectiveColumn 'Day of Week'
+
+		perspectiveColumn 'Day of Week Number'
+
+		perspectiveColumn 'Day of Month'
+
+		perspectiveColumn 'Day of Year'
+
+		perspectiveColumn 'Quarter Number'
+
+		perspectiveColumn 'Quarter Name'
+
+		perspectiveColumn 'Is Weekend'
+
+		perspectiveColumn 'Is Holiday'
+
+		perspectiveColumn 'Fiscal Year'
+
+		perspectiveColumn 'Fiscal Quarter'
+
+		perspectiveColumn 'Fiscal Month'
+
+	perspectiveTable 'Dim Time Period'
+
+		perspectiveColumn time_period_key
+
+		perspectiveColumn 'Time Period'
+
+		perspectiveColumn 'Time Period Type'
+
+		perspectiveColumn 'Start Date'
+
+		perspectiveColumn 'End Date'
+
+		perspectiveColumn 'Days Count'
+
+		perspectiveColumn 'Is Current'
+
+		perspectiveColumn 'Sort Order'
+
+		perspectiveColumn 'Period Category'
+
+		perspectiveColumn 'Reference Date' 

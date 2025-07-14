@@ -1,0 +1,26 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+
+
+
+	/// User perspective for sales analysis
+	perspective 'Sales Analysis'
+		annotation DevPerspectives = "$harmonized,$grocery_connector,$retail_connector"
+
+	/// User perspective for inventory analysis
+	perspective 'Inventory Analysis'
+		annotation DevPerspectives = "$harmonized,$grocery_connector,$retail_connector"
+
+	/// User perspective for product analysis
+	perspective 'Product Analysis'
+		annotation DevPerspectives = "$harmonized,$grocery_connector,$retail_connector"
+
+annotation __TEdtr = 1
+
+annotation TabularEditor_SerializeOptions = {"IgnoreInferredObjects":true,"IgnoreInferredProperties":true,"IgnoreTimestamps":true,"SplitMultilineStrings":true,"PrefixFilenames":false,"LocalTranslations":true,"LocalPerspectives":true,"LocalRelationships":true,"TmdlOptions":{"IncludeRefs":false,"ExpressionTrimStyle":"TrimTrailingWhitespaces"},"Levels":["Data Sources","Perspectives","Relationships","Roles","Shared Expressions","Tables","Tables/Calculation Items","Tables/Columns","Tables/Hierarchies","Tables/Measures","Tables/Partitions","Translations"]}
+
+annotation PBI_ProTooling = ["TMDL-Extension"]
+
+annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":[]} 

@@ -1,0 +1,580 @@
+# Docker Compose Production Override
+# Enhanced security, resource limits, and monitoring for production deployment
+
+version: '3.8'
+
+services:
+  # PostgreSQL with production optimizations
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      - POSTGRES_USER_FILE=/run/secrets/postgres_user
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+      - POSTGRES_DB=modern_data_stack
+      - POSTGRES_INITDB_ARGS=--auth-host=md5
+      - POSTGRES_SHARED_PRELOAD_LIBRARIES=pg_stat_statements
+    secrets:
+      - postgres_user
+      - postgres_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # MLflow with production configuration
+  mlflow:
+    build:
+      context: ./mlflow
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=postgresql://mlflow:$$MLFLOW_DB_PASSWORD@postgres:5432/mlflow
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=s3://mlflow-artifacts/
+      - MLFLOW_TRACKING_USERNAME=admin
+      - MLFLOW_TRACKING_PASSWORD_FILE=/run/secrets/mlflow_password
+      - AWS_ACCESS_KEY_ID_FILE=/run/secrets/aws_access_key
+      - AWS_SECRET_ACCESS_KEY_FILE=/run/secrets/aws_secret_key
+    secrets:
+      - mlflow_password
+      - aws_access_key
+      - aws_secret_key
+    volumes:
+      - mlflow_data:/mlflow/artifacts
+      - ./mlflow/mlflow.conf:/etc/mlflow/mlflow.conf
+    depends_on:
+      - postgres
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "python", "/opt/mlflow/healthcheck.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - backend
+      - frontend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # Great Expectations with production configuration
+  great-expectations:
+    build:
+      context: ./great-expectations
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - POSTGRES_CONNECTION_STRING=postgresql://ge:$$GE_DB_PASSWORD@postgres:5432/great_expectations
+      - S3_BUCKET_NAME=great-expectations-data
+      - S3_DOCS_BUCKET=great-expectations-docs
+      - DATA_CONTEXT_ID=production-context
+      - SLACK_WEBHOOK_URL_FILE=/run/secrets/slack_webhook
+    secrets:
+      - slack_webhook
+    volumes:
+      - ge_data:/opt/great_expectations/data
+      - ge_expectations:/opt/great_expectations/expectations
+      - ge_validations:/opt/great_expectations/validations
+    depends_on:
+      - postgres
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "python", "/opt/great_expectations/healthcheck.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - backend
+      - frontend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # Jupyter Lab with production security
+  jupyter-lab:
+    build:
+      context: ./jupyter
+      dockerfile: Dockerfile.jupyter-ml
+    restart: always
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN_FILE=/run/secrets/jupyter_token
+      - JUPYTER_PASSWORD_FILE=/run/secrets/jupyter_password
+      - JUPYTER_ENV=production
+      - JUPYTERHUB_API_TOKEN_FILE=/run/secrets/jupyterhub_token
+    secrets:
+      - jupyter_token
+      - jupyter_password
+      - jupyterhub_token
+    volumes:
+      - jupyter_data:/home/jovyan/work
+      - ./jupyter/jupyter_notebook_config.py:/home/jovyan/.jupyter/jupyter_notebook_config.py
+    depends_on:
+      - postgres
+      - mlflow
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/api"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - backend
+      - frontend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # Airflow with production configuration
+  airflow-webserver:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql://airflow:$$AIRFLOW_DB_PASSWORD@postgres:5432/airflow
+      - AIRFLOW__CORE__FERNET_KEY_FILE=/run/secrets/airflow_fernet_key
+      - AIRFLOW__WEBSERVER__SECRET_KEY_FILE=/run/secrets/airflow_secret_key
+      - AIRFLOW__WEBSERVER__AUTHENTICATE=True
+      - AIRFLOW__WEBSERVER__AUTH_BACKEND=airflow.auth.backends.password_auth
+      - AIRFLOW__WEBSERVER__RBAC=True
+    secrets:
+      - airflow_fernet_key
+      - airflow_secret_key
+    volumes:
+      - airflow_dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+      - airflow_plugins:/opt/airflow/plugins
+    depends_on:
+      - postgres
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - backend
+      - frontend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # Prometheus with production configuration
+  prometheus:
+    image: prom/prometheus:latest
+    restart: always
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=10GB'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    volumes:
+      - prometheus_data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/rules:/etc/prometheus/rules
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - backend
+      - monitoring
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # Grafana with production configuration
+  grafana:
+    image: grafana/grafana:latest
+    restart: always
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD_FILE=/run/secrets/grafana_password
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      - GF_SECURITY_COOKIE_SECURE=true
+      - GF_SECURITY_COOKIE_SAMESITE=strict
+      - GF_SECURITY_STRICT_TRANSPORT_SECURITY=true
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+    secrets:
+      - grafana_password
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - backend
+      - frontend
+      - monitoring
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # Redis with production configuration
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --appendonly yes --requirepass $$REDIS_PASSWORD
+    environment:
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+    secrets:
+      - redis_password
+    volumes:
+      - redis_data:/data
+      - ./redis/redis.conf:/etc/redis/redis.conf
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # Nginx reverse proxy with SSL
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./ssl:/etc/nginx/ssl
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - mlflow
+      - great-expectations
+      - jupyter-lab
+      - airflow-webserver
+      - grafana
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - frontend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # Log aggregator (ELK Stack)
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - cluster.name=modern-data-stack
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD_FILE=/run/secrets/elastic_password
+    secrets:
+      - elastic_password
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - backend
+      - monitoring
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # Security scanner service
+  security-scanner:
+    build:
+      context: .
+      dockerfile: Dockerfile.security-scanner
+    restart: "no"
+    environment:
+      - SCAN_CONFIG_FILE=/security/config/scan-config.json
+      - REPORTS_DIR=/security/reports
+      - IMAGE_NAME=modern-data-stack-showcase_mlflow:latest
+      - COMPLIANCE_STANDARDS=cis nist
+    volumes:
+      - ./security:/security/source
+      - security_reports:/security/reports
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+# Docker secrets for production
+secrets:
+  postgres_user:
+    file: ./secrets/postgres_user.txt
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  mlflow_password:
+    file: ./secrets/mlflow_password.txt
+  aws_access_key:
+    file: ./secrets/aws_access_key.txt
+  aws_secret_key:
+    file: ./secrets/aws_secret_key.txt
+  slack_webhook:
+    file: ./secrets/slack_webhook.txt
+  jupyter_token:
+    file: ./secrets/jupyter_token.txt
+  jupyter_password:
+    file: ./secrets/jupyter_password.txt
+  jupyterhub_token:
+    file: ./secrets/jupyterhub_token.txt
+  airflow_fernet_key:
+    file: ./secrets/airflow_fernet_key.txt
+  airflow_secret_key:
+    file: ./secrets/airflow_secret_key.txt
+  grafana_password:
+    file: ./secrets/grafana_password.txt
+  redis_password:
+    file: ./secrets/redis_password.txt
+  elastic_password:
+    file: ./secrets/elastic_password.txt
+
+# Production volumes
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/modern-data-stack/postgres
+  mlflow_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/modern-data-stack/mlflow
+  ge_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/modern-data-stack/great-expectations/data
+  ge_expectations:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/modern-data-stack/great-expectations/expectations
+  ge_validations:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/modern-data-stack/great-expectations/validations
+  jupyter_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/modern-data-stack/jupyter
+  airflow_dags:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/modern-data-stack/airflow/dags
+  airflow_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/modern-data-stack/airflow/logs
+  airflow_plugins:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/modern-data-stack/airflow/plugins
+  prometheus_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/modern-data-stack/prometheus
+  grafana_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/modern-data-stack/grafana
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/modern-data-stack/redis
+  nginx_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/modern-data-stack/nginx/logs
+  elasticsearch_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/modern-data-stack/elasticsearch
+  security_reports:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/modern-data-stack/security/reports
+
+# Production networks
+networks:
+  frontend:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+  backend:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+  monitoring:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.22.0.0/24 

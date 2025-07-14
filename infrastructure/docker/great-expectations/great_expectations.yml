@@ -1,0 +1,243 @@
+# Great Expectations Configuration
+# Production-ready configuration for comprehensive data quality validation
+
+# Configuration metadata
+config_version: 3.0
+config_variables_file_path: config/config_variables.yml
+
+# Data sources configuration
+datasources:
+  postgres_datasource:
+    class_name: Datasource
+    execution_engine:
+      class_name: SqlAlchemyExecutionEngine
+      connection_string: ${POSTGRES_CONNECTION_STRING}
+      pool_size: 10
+      max_overflow: 20
+      pool_pre_ping: true
+      pool_recycle: 3600
+    data_connectors:
+      default_runtime_data_connector:
+        class_name: RuntimeDataConnector
+        batch_identifiers:
+          - default_identifier_name
+      default_inferred_data_connector:
+        class_name: InferredAssetSqlDataConnector
+        include_schema_name: true
+        introspection_directives:
+          schema_name: public
+  
+  file_datasource:
+    class_name: Datasource
+    execution_engine:
+      class_name: PandasExecutionEngine
+    data_connectors:
+      default_runtime_data_connector:
+        class_name: RuntimeDataConnector
+        batch_identifiers:
+          - default_identifier_name
+      default_inferred_data_connector:
+        class_name: InferredAssetFilesystemDataConnector
+        base_directory: /opt/great_expectations/data
+        default_regex:
+          pattern: (.*)\.csv
+          group_names:
+            - data_asset_name
+  
+  s3_datasource:
+    class_name: Datasource
+    execution_engine:
+      class_name: PandasExecutionEngine
+    data_connectors:
+      default_runtime_data_connector:
+        class_name: RuntimeDataConnector
+        batch_identifiers:
+          - default_identifier_name
+      default_inferred_data_connector:
+        class_name: InferredAssetS3DataConnector
+        bucket: ${S3_BUCKET_NAME}
+        prefix: data/
+        default_regex:
+          pattern: (.*)\.csv
+          group_names:
+            - data_asset_name
+
+# Stores configuration
+stores:
+  # Expectations store
+  expectations_store:
+    class_name: ExpectationsStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: /opt/great_expectations/expectations
+      platform_specific_separator: false
+  
+  # Validations store
+  validations_store:
+    class_name: ValidationsStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: /opt/great_expectations/validations
+      platform_specific_separator: false
+  
+  # Evaluation parameter store
+  evaluation_parameter_store:
+    class_name: EvaluationParameterStore
+    store_backend:
+      class_name: InMemoryStoreBackend
+  
+  # Checkpoint store
+  checkpoint_store:
+    class_name: CheckpointStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: /opt/great_expectations/checkpoints
+      platform_specific_separator: false
+  
+  # Profiler store
+  profiler_store:
+    class_name: ProfilerStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: /opt/great_expectations/profilers
+      platform_specific_separator: false
+
+# Data docs configuration
+data_docs_sites:
+  local_site:
+    class_name: SiteBuilder
+    show_how_to_buttons: true
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: /opt/great_expectations/data_docs
+      platform_specific_separator: false
+    site_index_builder:
+      class_name: DefaultSiteIndexBuilder
+      show_cta_footer: true
+      
+  s3_site:
+    class_name: SiteBuilder
+    store_backend:
+      class_name: TupleS3StoreBackend
+      bucket: ${S3_DOCS_BUCKET}
+      prefix: data_docs/
+    site_index_builder:
+      class_name: DefaultSiteIndexBuilder
+
+# Validation operators (deprecated but still supported)
+validation_operators:
+  action_list_operator:
+    class_name: ActionListValidationOperator
+    action_list:
+      - name: store_validation_result
+        action:
+          class_name: StoreValidationResultAction
+      - name: store_evaluation_params
+        action:
+          class_name: StoreEvaluationParametersAction
+      - name: update_data_docs
+        action:
+          class_name: UpdateDataDocsAction
+          site_names:
+            - local_site
+      - name: send_slack_notification
+        action:
+          class_name: SlackNotificationAction
+          slack_webhook: ${SLACK_WEBHOOK_URL}
+          notify_on: failure
+          renderer:
+            module_name: great_expectations.render.renderer.slack_renderer
+            class_name: SlackRenderer
+
+# Configuration for anonymous usage statistics
+anonymous_usage_statistics:
+  enabled: false
+  data_context_id: ${DATA_CONTEXT_ID}
+  usage_statistics_url: https://stats.greatexpectations.io/great_expectations/v1/usage_statistics
+
+# Notebooks configuration
+notebooks:
+  create_expectations:
+    class_name: SuiteEditNotebookRenderer
+  edit_expectations:
+    class_name: SuiteEditNotebookRenderer
+  profiling:
+    class_name: SuiteScaffoldNotebookRenderer
+
+# Plugins configuration
+plugins_directory: /opt/great_expectations/plugins
+
+# Config variables
+config_variables:
+  postgres_connection_string: ${POSTGRES_CONNECTION_STRING}
+  s3_bucket_name: ${S3_BUCKET_NAME}
+  s3_docs_bucket: ${S3_DOCS_BUCKET}
+  slack_webhook_url: ${SLACK_WEBHOOK_URL}
+  data_context_id: ${DATA_CONTEXT_ID}
+
+# Fluent datasources (new API)
+fluent_datasources:
+  postgres_fluent:
+    type: sql
+    connection_string: ${POSTGRES_CONNECTION_STRING}
+    assets:
+      retail_sales:
+        type: table
+        table_name: retail_sales
+        schema_name: public
+      inventory_data:
+        type: table
+        table_name: inventory_data
+        schema_name: public
+  
+  pandas_fluent:
+    type: pandas_filesystem
+    base_directory: /opt/great_expectations/data
+    assets:
+      csv_files:
+        type: csv
+        glob_directive: "*.csv"
+        read_csv_kwargs:
+          header: 0
+          sep: ","
+          encoding: utf-8
+
+# Checkpoint configurations
+checkpoints:
+  retail_data_checkpoint:
+    name: retail_data_checkpoint
+    config_version: 1.0
+    class_name: SimpleCheckpoint
+    validations:
+      - batch_request:
+          datasource_name: postgres_datasource
+          data_connector_name: default_inferred_data_connector
+          data_asset_name: retail_sales
+        expectation_suite_name: retail_sales_expectations
+  
+  file_data_checkpoint:
+    name: file_data_checkpoint
+    config_version: 1.0
+    class_name: SimpleCheckpoint
+    validations:
+      - batch_request:
+          datasource_name: file_datasource
+          data_connector_name: default_inferred_data_connector
+          data_asset_name: sample_data
+        expectation_suite_name: sample_data_expectations
+
+# Profiler configurations
+profilers:
+  automated_profiler:
+    class_name: UserConfigurableProfiler
+    config_version: 1.0
+    rules:
+      column_nullity_rule:
+        class_name: ColumnNullityRule
+        mostly: 0.8
+      column_uniqueness_rule:
+        class_name: ColumnUniquenessRule
+        mostly: 0.8
+      column_value_range_rule:
+        class_name: ColumnValueRangeRule
+        mostly: 0.8 

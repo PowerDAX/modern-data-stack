@@ -1,0 +1,178 @@
+table 'Fact Inventory'
+	annotation PBI_Id = 95b5c6d7-e8f9-4a0b-c1d2-3e4f5a6b7c8d
+
+	annotation '$grocery_connector' = 'Fact Inventory Location'
+	annotation '$retail_connector' = 'Fact Inventory Store'
+	annotation '$harmonized' = 'Fact Inventory'
+
+	annotation '$grocery_connector.BigQuery.TableId' = 'modern-data-stack-showcase.dbt_analytics.analytics_grocery_connector_fact_inventory'
+	annotation '$retail_connector.BigQuery.TableId' = 'modern-data-stack-showcase.dbt_analytics.analytics_retail_connector_fact_inventory'
+	annotation '$harmonized.BigQuery.TableId' = 'modern-data-stack-showcase.dbt_analytics.analytics_harmonized_fact_inventory'
+
+	measure 'On Hand Quantity' = SUM('Fact Inventory'[on_hand_quantity])
+		displayFolder: Measures
+		formatString: #,##0;(#,##0)
+
+	measure 'On Hand Amount' = SUM('Fact Inventory'[on_hand_amount])
+		displayFolder: Measures
+		formatString: $ #,##0.00;($ #,##0.00)
+
+	measure 'On Order Quantity' = SUM('Fact Inventory'[on_order_quantity])
+		displayFolder: Measures
+		formatString: #,##0;(#,##0)
+
+	measure 'On Order Amount' = SUM('Fact Inventory'[on_order_amount])
+		displayFolder: Measures
+		formatString: $ #,##0.00;($ #,##0.00)
+
+	measure 'Allocated Quantity' = SUM('Fact Inventory'[allocated_quantity])
+		displayFolder: Measures
+		formatString: #,##0;(#,##0)
+
+	measure 'Available Quantity' = SUM('Fact Inventory'[available_quantity])
+		displayFolder: Measures
+		formatString: #,##0;(#,##0)
+
+	measure 'Total Inventory Value' = [On Hand Amount] + [On Order Amount]
+		displayFolder: Measures
+		formatString: $ #,##0.00;($ #,##0.00)
+
+	measure 'Available for Sale Quantity' = [On Hand Quantity] - [Allocated Quantity]
+		displayFolder: Measures
+		formatString: #,##0;(#,##0)
+
+	measure 'Inventory Utilization %' = DIVIDE([Allocated Quantity], [On Hand Quantity])
+		displayFolder: Measures
+		formatString: #,##0.00 %;(#,##0.00 %)
+
+	measure 'Average Inventory Value' = DIVIDE([On Hand Amount], [On Hand Quantity])
+		displayFolder: Measures
+		formatString: $ #,##0.00;($ #,##0.00)
+
+	measure 'Inventory Record Count' = DISTINCTCOUNT('Fact Inventory'[inventory_id])
+		displayFolder: Measures
+		formatString: #,##0;(#,##0)
+
+	measure 'Product Count' = DISTINCTCOUNT('Fact Inventory'[product_id])
+		displayFolder: Measures
+		formatString: #,##0;(#,##0)
+
+	measure 'Store Count' = DISTINCTCOUNT('Fact Inventory'[store_id])
+		displayFolder: Measures
+		formatString: #,##0;(#,##0)
+
+	measure 'On Hand Quantity Weekly Average' = 
+			VAR days = COUNT( 'Dim Calendar'[Date])
+			VAR weeks = DIVIDE( days, 7)
+			VAR onHand = [On Hand Quantity (Store)]
+			
+			RETURN
+				DIVIDE( onHand, weeks)
+		formatString: $ #,##0;($ #,##0)
+		displayFolder: Measures\_Average
+
+	measure 'On Hand Amount Weekly Average' = 
+			VAR days = COUNT( 'Dim Calendar'[Date])
+			VAR weeks = DIVIDE( days, 7)
+			VAR onHand = [On Hand Amount (Store)]
+			
+			RETURN
+				DIVIDE( onHand, weeks)
+		formatString: $ #,##0;($ #,##0)
+		displayFolder: Measures\_Average
+
+	measure 'Weeks of Supply' = 
+			VAR weeksLookback = 4
+			VAR daysLookback = ( weeksLookback * 7 ) - 1
+			VAR maxDate = LASTDATE ( 'Dim Calendar'[Date] )
+			VAR lookbackSales =
+				CALCULATE (
+					[Sales Quantity],
+					REMOVEFILTERS ( 'Dim Time Period' ),
+					REMOVEFILTERS ( 'Dim Calendar' ),
+					DATESBETWEEN ( 'Dim Calendar'[Date], maxDate - daysLookback, maxDate )
+				)
+			VAR weeklyLookbackSales = DIVIDE ( lookbackSales, weeksLookback )
+			VAR onHand = [On Hand Quantity Weekly Average]
+			
+			RETURN
+			DIVIDE ( onHand, weeklyLookbackSales )
+		displayFolder: Measures/_Weeks of Supply
+		formatString: #,##0.00;(#,##0.00)
+
+	column inventory_id
+		dataType: int64
+		formatString: 0
+		isHidden
+		displayFolder: Keys
+		sourceColumn: inventory_id
+
+	column date_key
+		dataType: dateTime
+		isHidden
+		displayFolder: Keys
+		sourceColumn: date_key
+
+	column store_id
+		dataType: string
+		isHidden
+		displayFolder: Keys
+		sourceColumn: store_id
+		annotation '$grocery_connector.sourceColumn' = "location_id"
+
+	column product_id
+		dataType: string
+		isHidden
+		displayFolder: Keys
+		sourceColumn: product_id
+		annotation '$grocery_connector.sourceColumn' = "item_id"
+
+	column on_hand_quantity
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		displayFolder: Facts
+		sourceColumn: on_hand_quantity
+
+	column on_hand_amount
+		dataType: decimal
+		isHidden
+		summarizeBy: sum
+		displayFolder: Facts
+		sourceColumn: on_hand_amount
+
+	column on_order_quantity
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		displayFolder: Facts
+		sourceColumn: on_order_quantity
+
+	column on_order_amount
+		dataType: decimal
+		isHidden
+		summarizeBy: sum
+		displayFolder: Facts
+		sourceColumn: on_order_amount
+
+	column allocated_quantity
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		displayFolder: Facts
+		sourceColumn: allocated_quantity
+
+	column available_quantity
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		displayFolder: Facts
+		sourceColumn: available_quantity
+
+	column retailer_id
+		dataType: string
+		isHidden
+		displayFolder: Keys
+		sourceColumn: retailer_id
+
+	annotation PBI_ResultType = Table 

@@ -1,0 +1,119 @@
+# JupyterHub Multi-User Environment
+# Supports spawning specialized ML and DevOps containers
+
+FROM jupyterhub/jupyterhub:4.0
+
+# Switch to root for system installations
+USER root
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    build-essential \
+    nodejs \
+    npm \
+    docker.io \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages for JupyterHub
+RUN pip install --no-cache-dir \
+    jupyterhub-dummyauthenticator \
+    jupyterhub-nativeauthenticator \
+    jupyterhub-ldapauthenticator \
+    oauthenticator \
+    dockerspawner \
+    notebook \
+    jupyterlab \
+    psycopg2-binary \
+    sqlalchemy \
+    alembic \
+    prometheus-client \
+    jupyterhub-prometheus \
+    jupyterhub-idle-culler \
+    jupyterhub-systemdspawner
+
+# Install JupyterHub extensions
+RUN pip install --no-cache-dir \
+    jupyter-resource-usage \
+    jupyter-server-proxy \
+    jupyter-collaboration \
+    jupyter-ai \
+    jupyterlab-git \
+    jupyterlab-lsp \
+    jupyterlab-code-formatter \
+    jupyterlab-drawio \
+    jupyterlab-spreadsheet \
+    jupyterlab-execute-time \
+    jupyterlab-system-monitor \
+    jupyterlab-topbar \
+    jupyterlab-theme-toggle
+
+# Install additional JupyterLab extensions via npm
+RUN npm install -g \
+    @jupyterlab/toc \
+    @jupyterlab/debugger \
+    @jupyterlab/variable-inspector \
+    @jupyterlab/celltags \
+    @jupyterlab/git \
+    @jupyterlab/github \
+    @jupyterlab/latex \
+    @jupyterlab/mathjax3-extension
+
+# Create JupyterHub directories
+RUN mkdir -p /srv/jupyterhub/shared \
+    /srv/jupyterhub/config \
+    /srv/jupyterhub/templates \
+    /srv/jupyterhub/static
+
+# Set up JupyterHub configuration
+COPY jupyterhub_config.py /srv/jupyterhub/
+COPY templates/ /srv/jupyterhub/templates/
+COPY static/ /srv/jupyterhub/static/
+
+# Create admin user
+RUN useradd -m -s /bin/bash -G sudo admin
+
+# Set up SSL certificates (self-signed for development)
+RUN mkdir -p /srv/jupyterhub/ssl
+RUN openssl req -x509 -newkey rsa:4096 -keyout /srv/jupyterhub/ssl/key.pem \
+    -out /srv/jupyterhub/ssl/cert.pem -days 365 -nodes \
+    -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
+
+# Install monitoring tools
+RUN pip install --no-cache-dir \
+    jupyterhub-kubespawner \
+    jupyter-server-mathjax \
+    jupyter-cache \
+    jupyter-book
+
+# Set up custom themes and templates
+COPY custom.css /srv/jupyterhub/static/css/
+COPY custom.js /srv/jupyterhub/static/js/
+
+# Configure JupyterHub startup script
+COPY start-jupyterhub.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/start-jupyterhub.sh
+
+# Set permissions
+RUN chown -R root:root /srv/jupyterhub
+RUN chmod -R 755 /srv/jupyterhub
+
+# Create log directory
+RUN mkdir -p /var/log/jupyterhub
+RUN chown -R root:root /var/log/jupyterhub
+
+# Set working directory
+WORKDIR /srv/jupyterhub
+
+# Expose JupyterHub port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/hub/health || exit 1
+
+# Start JupyterHub
+CMD ["start-jupyterhub.sh"] 

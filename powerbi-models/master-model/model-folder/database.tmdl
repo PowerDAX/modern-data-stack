@@ -1,0 +1,3 @@
+database 'Modern Data Stack Master'
+	compatibilityLevel: 1601
+	compatibilityMode: powerBI 

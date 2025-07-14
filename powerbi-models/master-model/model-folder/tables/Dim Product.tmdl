@@ -1,0 +1,71 @@
+table 'Dim Product'
+	annotation PBI_Id = 65a4b5c6-d7e8-4f9a-b0c1-2d3e4f5a6b7c
+
+	annotation '$grocery_connector' = 'Dim Item'
+	annotation '$retail_connector' = 'Dim Product'
+	annotation '$harmonized' = 'Dim Product'
+
+	annotation '$grocery_connector.BigQuery.TableId' = 'modern-data-stack-showcase.dbt_analytics.analytics_grocery_connector_dim_item'
+	annotation '$retail_connector.BigQuery.TableId' = 'modern-data-stack-showcase.dbt_analytics.analytics_retail_connector_dim_product'
+	annotation '$harmonized.BigQuery.TableId' = 'modern-data-stack-showcase.dbt_analytics.analytics_harmonized_dim_product'
+
+	column product_id
+		dataType: string
+		isHidden
+		displayFolder: Keys
+		sourceColumn: product_id
+
+	column Product
+		dataType: string
+		sourceColumn: product
+		annotation '$grocery_connector.sourceColumn' = "item"
+
+	column 'Product Brand'
+		dataType: string
+		sourceColumn: product_brand
+		annotation '$grocery_connector.sourceColumn' = "item_brand"
+
+	column 'Product Category'
+		dataType: string
+		sourceColumn: product_category
+		annotation '$grocery_connector.sourceColumn' = "item_category"
+
+	column 'Product Subcategory'
+		dataType: string
+		sourceColumn: product_subcategory
+		annotation '$grocery_connector.sourceColumn' = "item_subcategory"
+
+	column 'Product Supplier'
+		dataType: string
+		sourceColumn: product_supplier
+		annotation '$grocery_connector.sourceColumn' = "item_supplier"
+
+	column 'Product Description'
+		dataType: string
+		sourceColumn: product_description
+		annotation '$grocery_connector.sourceColumn' = "item_description"
+
+	column 'Product Status'
+		dataType: string
+		sourceColumn: product_status
+		annotation '$grocery_connector.sourceColumn' = "item_status"
+
+	column 'Product UPC'
+		dataType: string
+		sourceColumn: upc
+
+	column 'Product Pack Size'
+		dataType: string
+		sourceColumn: pack_size
+
+	column 'Product Unit of Measure'
+		dataType: string
+		sourceColumn: unit_of_measure
+
+	column retailer_id
+		dataType: string
+		isHidden
+		displayFolder: Keys
+		sourceColumn: retailer_id
+
+	annotation PBI_ResultType = Table 

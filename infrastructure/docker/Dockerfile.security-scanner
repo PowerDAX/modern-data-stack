@@ -1,0 +1,93 @@
+# Security Scanner Docker Image
+# Multi-stage build with comprehensive security scanning tools
+
+# Stage 1: Build stage with security tools
+FROM alpine:3.18 as security-tools
+
+# Install system dependencies
+RUN apk add --no-cache \
+    curl \
+    wget \
+    git \
+    bash \
+    jq \
+    python3 \
+    py3-pip \
+    ca-certificates \
+    && rm -rf /var/cache/apk/*
+
+# Install Trivy vulnerability scanner
+RUN wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | tee /usr/share/keyrings/trivy.gpg > /dev/null && \
+    echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | tee -a /etc/apt/sources.list.d/trivy.list && \
+    apk update && \
+    apk add trivy
+
+# Install Docker bench for security
+RUN git clone https://github.com/docker/docker-bench-security.git /opt/docker-bench-security
+
+# Install additional security tools
+RUN pip3 install --no-cache-dir \
+    safety \
+    bandit \
+    semgrep \
+    checkov
+
+# Stage 2: Production stage
+FROM alpine:3.18
+
+# Set metadata labels
+LABEL maintainer="Data Engineering Team" \
+      version="1.0.0" \
+      description="Security Scanner for Docker Images" \
+      org.opencontainers.image.title="Security Scanner" \
+      org.opencontainers.image.description="Comprehensive security scanning for containers"
+
+# Create security user
+RUN addgroup -g 1000 security && \
+    adduser -D -u 1000 -G security security
+
+# Copy security tools from build stage
+COPY --from=security-tools /usr/bin/trivy /usr/bin/trivy
+COPY --from=security-tools /opt/docker-bench-security /opt/docker-bench-security
+COPY --from=security-tools /usr/bin/python3 /usr/bin/python3
+COPY --from=security-tools /usr/lib/python3.11/site-packages /usr/lib/python3.11/site-packages
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    curl \
+    wget \
+    git \
+    bash \
+    jq \
+    python3 \
+    ca-certificates \
+    && rm -rf /var/cache/apk/*
+
+# Create security scan directories
+RUN mkdir -p /security/scans \
+    /security/reports \
+    /security/config \
+    /security/scripts
+
+# Copy security scan scripts
+COPY security-scan.sh /security/scripts/
+COPY vulnerability-scan.sh /security/scripts/
+COPY compliance-check.sh /security/scripts/
+COPY security-report.py /security/scripts/
+
+# Set permissions
+RUN chmod +x /security/scripts/*.sh && \
+    chown -R security:security /security
+
+# Switch to security user
+USER security
+
+# Set working directory
+WORKDIR /security
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD trivy --version || exit 1
+
+# Default command
+CMD ["/security/scripts/security-scan.sh"] 
