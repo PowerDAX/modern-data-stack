@@ -1,0 +1,102 @@
+version: 2
+
+models:
+  - name: analytics_grocery_connector_fact_sales
+    description: "Analytics-ready grocery connector sales fact table for BI consumption"
+    columns:
+      - name: sales_id
+        description: "Sales surrogate key"
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: date_key
+        description: "Date key for sales period"
+      - name: location_key
+        description: "location business key"
+      - name: item_key
+        description: "item business key"
+      - name: sales_amount
+        description: "Total sales amount"
+      - name: sales_quantity
+        description: "Total sales quantity"
+      - name: regular_sales_amount
+        description: "Regular sales amount"
+      - name: regular_sales_quantity
+        description: "Regular sales quantity"
+      - name: promotional_sales_amount
+        description: "Promotional sales amount"
+      - name: promotional_sales_quantity
+
+  - name: analytics_grocery_connector_fact_inventory
+    description: "Analytics-ready grocery connector inventory fact table for BI consumption"
+    columns:
+      - name: inventory_id
+        description: "Inventory surrogate key"
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: date_key
+        description: "Date key for inventory period"
+      - name: location_key
+        description: "location business key"
+      - name: item_key
+        description: "item business key"
+      - name: on_hand_quantity
+        description: "On hand inventory quantity"
+      - name: on_hand_amount
+        description: "On hand inventory amount"
+      - name: on_order_quantity
+        description: "On order inventory quantity"
+      - name: on_order_amount
+        description: "On order inventory amount"
+      - name: allocated_quantity
+        description: "Allocated inventory quantity"
+      - name: available_quantity
+
+  - name: analytics_grocery_connector_dim_item
+    description: "Analytics-ready grocery connector item dimension for BI consumption"
+    columns:
+      - name: item_id
+        description: "item surrogate key"
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: item_key
+        description: "item business key"
+      - name: item
+        description: "item name"
+      - name: item_brand
+        description: "item brand name"
+      - name: item_category
+        description: "item category name"
+      - name: item_subcategory
+        description: "item subcategory name"
+      - name: item_supplier
+        description: "item supplier name"
+      - name: item_status
+        description: "item status"
+
+  - name: analytics_grocery_connector_dim_location
+    description: "Analytics-ready grocery connector location dimension for BI consumption"
+    columns:
+      - name: location_id
+        description: "location surrogate key"
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: location_key
+        description: "location business key"
+      - name: location_name
+        description: "location name"
+      - name: location_chain
+        description: "location chain name"
+      - name: location_district
+        description: "location district name"
+      - name: location_region
+        description: "location region name"
+      - name: location_status
+        description: "location status" 

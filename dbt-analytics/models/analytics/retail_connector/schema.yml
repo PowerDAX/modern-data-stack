@@ -1,0 +1,88 @@
+version: 2
+
+models:
+  - name: analytics_retail_connector_fact_sales
+    description: "Analytics-ready retail connector sales fact table for BI consumption"
+    columns:
+      - name: sales_id
+        description: "Sales surrogate key"
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: date_key
+        description: "Date key for sales period"
+      - name: store_key
+        description: "Store business key"
+      - name: product_key
+        description: "Product business key"
+      - name: sales_amount
+        description: "Total sales amount"
+      - name: sales_quantity
+        description: "Total sales quantity"
+
+  - name: analytics_retail_connector_fact_inventory
+    description: "Analytics-ready retail connector inventory fact table for BI consumption"
+    columns:
+      - name: inventory_id
+        description: "Inventory surrogate key"
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: date_key
+        description: "Date key for inventory period"
+      - name: store_key
+        description: "Store business key"
+      - name: product_key
+        description: "Product business key"
+      - name: on_hand_quantity
+        description: "On hand inventory quantity"
+      - name: on_hand_amount
+        description: "On hand inventory amount"
+
+  - name: analytics_retail_connector_dim_product
+    description: "Analytics-ready retail connector product dimension for BI consumption"
+    columns:
+      - name: product_id
+        description: "Product surrogate key"
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: product_key
+        description: "Product business key"
+      - name: product
+        description: "Product name"
+      - name: product_brand
+        description: "Product brand name"
+      - name: product_category
+        description: "Product category name"
+      - name: product_subcategory
+        description: "Product subcategory name"
+      - name: product_supplier
+        description: "Product supplier name"
+      - name: product_status
+        description: "Product status"
+
+  - name: analytics_retail_connector_dim_store
+    description: "Analytics-ready retail connector store dimension for BI consumption"
+    columns:
+      - name: store_id
+        description: "Store surrogate key"
+      - name: account_id
+        description: "Account identifier"
+      - name: connector_id
+        description: "Connector identifier"
+      - name: store_key
+        description: "Store business key"
+      - name: store_name
+        description: "Store name"
+      - name: store_chain
+        description: "Store chain name"
+      - name: store_district
+        description: "Store district name"
+      - name: store_region
+        description: "Store region name"
+      - name: store_status
+        description: "Store status" 

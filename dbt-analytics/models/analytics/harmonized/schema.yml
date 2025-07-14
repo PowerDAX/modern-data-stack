@@ -1,0 +1,100 @@
+version: 2
+
+models:
+  - name: analytics_harmonized_fact_sales
+    description: "Analytics-ready harmonized sales fact table for cross-connector BI consumption"
+    columns:
+      - name: sales_id
+        description: "Harmonized sales surrogate key"
+      - name: retailer_id
+        description: "Harmonized retailer identifier"
+      - name: store_id
+        description: "Harmonized store surrogate key"
+      - name: product_id
+        description: "Harmonized product surrogate key"
+      - name: date_key
+        description: "Date key for sales period"
+      - name: sales_amount
+        description: "Total sales amount"
+      - name: sales_quantity
+        description: "Total sales quantity"
+      - name: connector_name
+        description: "Source connector name"
+
+  - name: analytics_harmonized_fact_inventory
+    description: "Analytics-ready harmonized inventory fact table for cross-connector BI consumption"
+    columns:
+      - name: inventory_id
+        description: "Harmonized inventory surrogate key"
+      - name: retailer_id
+        description: "Harmonized retailer identifier"
+      - name: store_id
+        description: "Harmonized store surrogate key"
+      - name: product_id
+        description: "Harmonized product surrogate key"
+      - name: date_key
+        description: "Date key for inventory period"
+      - name: on_hand_quantity
+        description: "On hand inventory quantity"
+      - name: on_hand_amount
+        description: "On hand inventory amount"
+      - name: connector_name
+        description: "Source connector name"
+
+  - name: analytics_harmonized_dim_product
+    description: "Analytics-ready harmonized product dimension for cross-connector BI consumption"
+    columns:
+      - name: product_id
+        description: "Harmonized product surrogate key"
+      - name: retailer_id
+        description: "Harmonized retailer identifier"
+      - name: product_key
+        description: "Product business key"
+      - name: product
+        description: "Product name"
+      - name: product_brand
+        description: "Product brand name"
+      - name: product_category
+        description: "Product category name"
+      - name: product_subcategory
+        description: "Product subcategory name"
+      - name: product_supplier
+        description: "Product supplier name"
+      - name: product_status
+        description: "Product status"
+      - name: connector_name
+        description: "Source connector name"
+
+  - name: analytics_harmonized_dim_store
+    description: "Analytics-ready harmonized store dimension for cross-connector BI consumption"
+    columns:
+      - name: store_id
+        description: "Harmonized store surrogate key"
+      - name: retailer_id
+        description: "Harmonized retailer identifier"
+      - name: store_key
+        description: "Store business key"
+      - name: store_name
+        description: "Store name"
+      - name: store_chain
+        description: "Store chain name"
+      - name: store_district
+        description: "Store district name"
+      - name: store_region
+        description: "Store region name"
+      - name: store_status
+        description: "Store status"
+      - name: connector_name
+        description: "Source connector name"
+
+  - name: analytics_harmonized_dim_retailer
+    description: "Analytics-ready harmonized retailer dimension for cross-connector BI consumption"
+    columns:
+      - name: retailer_id
+        description: "Harmonized retailer identifier"
+      - name: retailer_name
+        description: "Retailer name"
+      - name: retailer_type
+        description: "Retailer type"
+      - name: connector_name
+        description: "Source connector name" 
